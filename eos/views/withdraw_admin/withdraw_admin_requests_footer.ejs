@@ -1,0 +1,264 @@
+<script>
+        new Vue({
+        el: '#q-app',
+        data: function () {
+          return {
+            tabSelect: "multiple",
+            tab_status: '',
+            filter: 'amtc',
+            drawerState: true,
+            columns_requests: [ 
+              { name: '_id', label: 'id', align: 'left', field: '_id', sortable: true },
+              { name: 'totalAmount', required: true, label: '总金额 Total Amount', field: 'totalAmount', sortable: true, align: 'left', 
+                format:function(value, row){ var total_amount = (Big(value).toFixed()).split("."); total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]); }, sort: (a,b) => parseFloat(a) - parseFloat(b)  },
+              { name: 'estimateGas', required: true, label: '预估gas Estimated Gas', align: 'left', field: 'estimateGas', sortable: true,
+                format:function(value, row){ var total_amount = (Big(value).toFixed()).split("."); total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]); }, sort: (a,b) => parseFloat(a) - parseFloat(b)  },
+              { name: 'createDt', label: '建立时间 Creation Time', align: 'left', field: 'createDt', sortable: true, format:function(value, row){ return new Date(value).toLocaleString();} },
+              { name: 'transactions',required: true, label: '细节 Details', align: 'left', field: 'transactions',
+                format:function(value, row){ var result=""; for (var i=0;i<value.length;i++){ result+=value[i].requestAddr + ", " + value[i].amount+";"; } return result;} }
+            ],
+            columns_sub_requests: [
+              { name: 'requestAddr', label: '请求地址 Request Address', align: 'left', field: 'requestAddr', sortable: true },
+              { name: 'amount', required: true, label: '金额 Amount', align: 'left', field: 'amount',
+                format:function(value, row){ var total_amount = (Big(value).toFixed()).split("."); total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]); },sortable: true, sort: (a,b) => parseFloat(a) - parseFloat(b) },
+              { name: 'trace', label: 'Trace', align: 'left', field: 'trace', sortable: true },
+            ],
+            visible_requests: ['totalAmount', 'estimateGas', 'createDt', 'transactions'],
+            visible_sub_requests: ['requestAddr', 'amount', "trace"],
+            selected_requests: [],
+            separator: 'horizontal',
+            pagination_control: {rowsPerPage: 10, page: 1, rowsNumber: 12},
+            tableData: [],
+            totalAmount: 0,
+            hot_wallet: 'loading...',
+            hot_wallet_link: '',
+            balance: 'loading...',
+            main_balance: 'loading...',
+            wallet: {},
+            withdraw_approval: null,
+            password: '',
+            chk_tab_status: true,
+            chk_filter: true,
+            load_settings: true,
+            selected: 'Requests',
+            props: JSON.parse('<%- JSON.stringify(dashProps) %>'),
+            //expanded: ['Withdraw'],
+            select_request: [ { label: '提现请求需要批准 Withdraw Requests Requiring Approval', value: 'pending' }, { label: '已批准的提现请求 Approved Withdraw Requests', value: 'approved' }, 
+                { label: '拒绝的提现请求 Rejected Withdraw Requests', value: 'rejected' }, { label: '提现设置 Withdraw Settings', value: 'settings'} ],
+            settings: JSON.parse('<%- JSON.stringify(viewSettings) %>'),
+          }
+        },
+        methods: {
+			logout:function(){
+				$.post("/logout")
+					.done(function(data){
+						window.location.replace("/admin/login");
+					})
+			},
+            change_route: function(link){
+				window.location.href = link;
+			},
+            hot_wallet_page: function(e){
+                if(this.load_settings) e.preventDefault();
+            },
+            create_array: function(arr, index){ // Creates an array of selected entries
+                var new_arr = [];
+                for(var i = 0; i < arr.length; i++){
+                    new_arr.push(arr[i][index]);
+                }
+                return new_arr;
+            },
+            calc_total: function(table, table_name){
+                let total = [];
+                    Object.entries(table).forEach(([key, val]) => {
+                        total.push(parseFloat(val.totalAmount))
+                    });
+                var total_amount = (Big(total.reduce(function(total, num){ return total + num }, 0)).toFixed()).split(".");
+                total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);
+            },
+            process_requests: function(id, link, detail, tab){
+                this.$q.loading.show()
+                var data = this.selected_requests;
+                
+                var json_arr = (id == 'settings' ? $('#form_settings').serialize()+"&coinType="+this.filter+"&name=withdraw_"+this.filter+"_approval" : { data: this.create_array(data, "_id"), coinType: this.filter });
+                var self = this;
+
+                $.post('/'+link, json_arr, function (data, status, request) {
+                    setTimeout(function(){
+                        if(data["error"]){
+                            self.$q.notify({ message: '失败 Failed!', timeout: 3000, type: 'negative', color: 'negative', textColor: 'white', position: 'top-right', detail: detail});
+                            self.$q.loading.hide()
+                        }else{
+                            self.$q.notify({ message: '成功 Success!', timeout: 3000, type: 'positive', color: 'positive', textColor: 'white', position: 'top-right', detail: detail});
+                            self.$data.password = "";
+                            self.selected_requests = [];
+                            self.update_data();
+                        }
+                    }, 500);
+                });
+            },
+            init_data: function() {
+                var path = (window.location.href).split("?")
+                var params = (path[1] ? path[1].split("&") : false)
+                var temp_1 = (params[0] ? params[0].split("=") : false)
+                var temp_2 = (params[1] ? params[1].split("=") : false)
+
+                var coinType = (temp_1[0] == 'coin' ? temp_1[1] : (temp_2[0] == 'coin' ? temp_2[1] : false))
+                var table = (temp_1[0] == 'table' ? temp_1[1] : (temp_2[0] == 'table' ? temp_2[1] : false))
+                this.filter = coinType ? coinType : this.settings.coins[0];
+                this.tab_status = (table ? table : "pending")
+
+                switch(this.tab_status) {
+                    case("pending"): case("rejected"): this.tabSelect = "multiple"; break;
+                    default: this.tabSelect = "none";
+                }
+            },
+            update_data: function(settings){
+                const self = this;
+                self.set_loading();
+
+                if(!settings){
+                    settings = {pagination: self.$data.pagination_control, filter: self.$data.filter};
+                }
+                if(self.tab_status === "settings") {
+                    self.retrieve_hot_wallet();
+                } else {
+                    settings.coinType = this.filter;
+                    settings.table = this.tab_status;
+                    self.retrieve_data(settings).then(function(res) {
+                        self.$data.pagination_control = settings.pagination;
+                        self.$data.pagination_control.rowsNumber = res.count;
+                        self.$data.tableData = res.data;
+                        if(res.data.length > 0) {
+                            self.$data.totalAmount = self.add_commas(res.totals, true);
+                        }
+                        self.$q.loading.hide();
+                    });
+                }
+
+                if(this.chk_tab_status){
+                    this.chk_tab_status = false
+                    this.chk_filter = false
+                }
+            },
+            set_loading: function(){
+                this.$q.loading.show()
+                this.withdraw_approval = null
+                this.load_settings = true
+            },
+            retrieve_data: function(settings){
+                const query = { coinType: settings.coinType, data: settings.table, page: settings.pagination.page, count: settings.pagination.rowsPerPage,
+                    sort: settings.pagination.sortBy, sortDir: settings.pagination.descending ? "desc" : "asc"  };
+                return fetch(`/getWithdrawRequest?` + new URLSearchParams(query))
+                    .then(res => res.json())
+                    .then(res => {
+                        this.$q.loading.hide()
+                        return res;
+                    });
+            },
+            retrieve_hot_wallet: function(){
+                this.hot_wallet = 'loading...'
+                this.balance = 'loading...'
+                this.main_balance = 'loading...'
+                var coin = this.filter;
+                fetch(`/getHotWallet`)
+                .then(res => res.json())
+                .then(res => {
+                    if(this.main_coin){
+                        this.hot_wallet = res[this.main_coin] ? res[this.main_coin]["address"] :  "unable to retrieve wallet address"
+                        this.balance = this.add_commas(Big(Big(res[this.main_coin][coin]).round(2,3)).toFixed(), true);
+                        this.main_balance = this.add_commas(Big(Big(res[this.main_coin][this.main_coin]).round(2,3)).toFixed(), true);
+                    } else {
+                        this.hot_wallet = res[coin] ?  res[coin]["address"] :  "unable to retrieve wallet address";
+                        this.balance = this.add_commas(Big(res[coin][coin]).toFixed(), true);
+                    }
+                    this.load_settings = false;
+                });
+            
+                fetch(`/getSetting/?name=withdraw_`+this.filter+`_approval`)
+                .then(res => res.json())
+                .then(res => {
+                    this.withdraw_approval = res["WITHDRAW_"+this.filter.toUpperCase()+"_APPROVAL"];
+                    
+                    this.$q.loading.hide()
+                });
+            },
+            add_commas: function(value, checker){
+				var total_amount = (Big(value).toFixed()).split(".");
+				total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+				if(checker){
+					return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);
+				}
+				return total_amount[0]
+			},
+            change_query: function(){
+                var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?coin='+this.filter+"&table="+this.tab_status;
+                window.history.pushState({path:newurl},'',newurl);
+                this.$data.pagination_control.page = 1;
+                this.init_data();
+                this.update_data()
+            },
+            get_coin_label: function(coin) {
+                return this.settings.coin_names[coin] || coin.toUpperCase();
+            }
+        },
+        computed: {
+            color: function(){
+                this.selected_rejected = []
+                this.check_status = "no"
+                const color = this.settings.coin_colors;
+                return color[this.filter];
+            },
+			view_toggle: function(){
+				return (window.location.pathname).includes("transactions") || (window.location.pathname).includes("requests")
+			},
+            toggle_options: function(){
+                let options = [];
+                for(let i = 0; i < this.settings.coins.length; i++) {
+                    let coin = this.settings.coins[i];
+                    options.push({
+                        label: this.settings.coin_names[coin] ||  coin.toUpperCase(),
+                        value: coin
+                    });
+                }
+                return options;
+            },
+            main_coin: function() {
+                for(var coin in this.settings.coin_token_match) {
+                    if (this.filter === this.settings.coin_token_match[coin]) {
+                        return coin;
+                    }
+                }
+                return null;
+            }
+        },
+        watch: {
+			selected: function(newVal, oldVal){
+				loadRoute(this, newVal)
+			},
+            tab_status: function(newVal, oldVal){
+                if(this.chk_tab_status) this.chk_tab_status = false
+                else this.change_query()
+            },
+            filter: function(newVal, oldVal){
+                if(this.chk_filter) this.chk_filter = false
+                else this.change_query()
+            }
+        },
+        beforeMount(){
+            Quasar.i18n.set(Quasar.i18n.zhHans)
+            this.init_data();
+            this.update_data()
+            var self = this
+            setInterval(function(){
+                self.update_data()
+            }, 30000);
+        }
+      })
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<q-slide-transition>
+  <div class="row">
+    <% for(const coin in viewSettings.coin_token_match) { %>
+        <% const match = viewSettings.coin_token_match[coin] %>
+        <% const hasMain = viewSettings.coins.includes(coin) %>
+        <% if(!(viewSettings.coins.includes(coin) ||  viewSettings.coins.includes(match))) continue; %>
+        <div class="col-md-6 col-sm-12 col-xs-12"> 
+                <q-card class="tab-control bg-white">
+                    <div class="text-primary bg-grey-2 container-title-2"><strong>热钱包 HOT WALLET</strong></div>
+                        <q-card-separator></q-card-separator>
+                        <q-card-main class="q-pa-none">
+                            <div class="row pad-all">
+                                    <q-card class="tab-control bg-grey-2">
+                                        <q-card-main class="q-pa-none">
+                                            <q-list link inset-delimiter separator>
+                                                <q-list-header><%- viewSettings.coin_names[coin] || coin.toUpperCase() %> HOT WALLET ADDRESS</q-list-header>
+                                                    <div class="row">
+                                                        <div class="col-md-3 col-sm-12 col-xs-12">
+                                                            <center>
+                                                                <q-item-side color="<%-viewSettings.coin_colors[coin]%>">
+                                                                    <q-knob size="75px" :value="100" readonly><q-icon name="account_box"></q-icon></q-knob>
+                                                                </q-item-side>
+                                                            </center>
+                                                        </div>
+                                                        <div class="col-md-9 col-sm-12 col-xs-12">
+                                                            <q-item-main class="heighten">
+                                                                <q-btn  class=" text-weight-bold expand heighten" color="<%-viewSettings.coin_colors[coin]%>" @click="change_route('../admin/withdraw/requests/?coin=<%-hasMain ? coin : match%>&table=settings')" flat>
+                                                                    <span class="overflow-control">{{ hot_wallet.<%-coin%>_address }}</span>
+                                                                </q-btn>
+                                                            </q-item-main>
+                                                        </div>
+                                                    </div>
+                                            </q-list>
+                                        </q-card-main>
+                                    </q-card>
+                            </div>
+                            <div class="row pad-all">
+                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                    <q-card class="tab-control bg-grey-2">
+                                        <q-card-main class="q-pa-none">
+                                            <q-list link inset-delimiter separator>
+                                                <q-list-header><%- viewSettings.coin_names[coin] || coin.toUpperCase() %> BALANCE</q-list-header>
+                                                <div class="row">
+                                                    <div class="col-md-3 col-sm-12 col-xs-12 q-pl-sm">
+                                                        <center>
+                                                            <q-item-side color="<%-viewSettings.coin_colors[coin]%>">
+                                                                <q-knob v-model="hot_wallet.<%- coin %>" size="75px" :min="0" :max="max_balance" readonly><%- viewSettings.coin_names[coin] || coin.toUpperCase() %></q-knob>
+                                                            </q-item-side>
+                                                        </center>
+                                                    </div>
+                                                    <div class="col-md-9 col-sm-12 col-xs-12">
+                                                        <q-item-main class="adjust-font-size heighten">
+                                                            <q-btn  class="text-weight-bold expand heighten" color="<%-viewSettings.coin_colors[coin]%>" @click="change_route('../admin/withdraw/requests/?coin=<%- hasMain ? coin : match %>&table=settings')" flat>
+                                                                <span class="overflow-control">{{ hot_wallet.<%-coin%>_display }}</span>
+                                                            </q-btn>
+                                                        </q-item-main>
+                                                    </div>
+                                                </div>
+                                            </q-list>
+                                        </q-card-main>
+                                    </q-card>
+                                </div>
+                                <% if(viewSettings.coins.includes(match)){ %>
+                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                    <q-card class="tab-control bg-grey-2">
+                                        <q-card-main class="q-pa-none">
+                                            <q-list link inset-delimiter separator>
+                                                <q-list-header><%- viewSettings.coin_names[match] || match.toUpperCase() %> BALANCE</q-list-header>
+                                                    <div class="row">
+                                                        <div class="col-md-3 col-sm-12 col-xs-12 q-pl-sm">
+                                                            <center>
+                                                                <q-item-side color="<%-viewSettings.coin_colors[match]%>">
+                                                                    <q-knob v-model="hot_wallet.<%- match %>" size="75px" :min="0" :max="max_balance" readonly><%- viewSettings.coin_names[match] || match.toUpperCase() %></q-knob>
+                                                                </q-item-side>
+                                                            </center>
+                                                        </div>
+                                                        <div class="col-md-9 col-sm-12 col-xs-12">
+                                                            <q-item-main class="adjust-font-size heighten">
+                                                                <q-btn class=" text-weight-bold expand heighten" color="<%-viewSettings.coin_colors[match]%>" @click="change_route('../admin/withdraw/requests/?coin=<%- match %>&table=settings')" flat>
+                                                                    <span class="overflow-control">{{ hot_wallet.<%-match%>_display }}</span>
+                                                                </q-btn>
+                                                            </q-item-main>
+                                                        </div>
+                                                    </div>
+                                            </q-list>
+                                        </q-card-main>
+                                    </q-card>
+                                </div>
+                                <% } %>
+                            </div>
+                        </q-card-main>
+                    </q-card>
+                </div>
+    <% } %>
+  </div>
+</q-slide-transition>

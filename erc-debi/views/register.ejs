@@ -1,0 +1,45 @@
+<%- include('dashboard/dashboard_header') %>
+<div class="big-pad">
+  <q-card class="tab-control bg-white" style="width:50%">
+      <div class="text-primary bg-grey-2 container-title"><strong><%- title %></strong></div>
+      <q-card-separator></q-card-separator>
+      <q-card-main class="q-pa-none">
+          <div class="row form-control-3 margin-top-slash">
+              <div class="col-md-12 col-sm-12 col-xs-12 col-control separator">
+                  <form id="register" @submit.prevent="submit">
+                      <q-field icon="face">
+                          <q-input type="text" placeholder="Username" float-label="Username" stack-label="Username"
+                              class="form-control-2" name="username" required="true" v-model="username"></q-input>
+                          <q-input type="password" placeholder="Password" float-label="Password" stack-label="Password"
+                              class="form-control-2" name="password" required="true" v-model="password"></q-input>
+                          <q-input type="password" placeholder="Confirm Password" float-label="Confirm Password" stack-label="Confirm Password"
+                              class="form-control-2" name="confirmPassword" required="false" v-model="confirmPassword"></q-input>
+                          <q-table :data="permissions" :columns="columns" row-key="code" color="secondary" selection="multiple"
+                            :visible-columns="visible" :selected.sync="selectedPermissions" :pagination.sync="paginationControl"
+                            dense hide-bottom>
+                          </q-table>
+                      </q-field>
+                      <div class="row pad-vertical">
+                          <div class="col-md-2 col-sm-2 col-xs-2"></div>
+                          <div class="col-md-8 col-sm-8 col-xs-8">
+                              <q-btn color="primary" id="submitBtn" size="md" glossy :label="submitLabel" type="submit" class="form-control-2 expand"></q-btn>
+                          </div>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      </q-card-main>
+  </q-card>
+</div>
+
+</q-page-container>
+</q-layout>
+
+</div>
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.min.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<script src="/scripts/big.min.js"></script>
+
+<%- include('dashboard/dashboard_register_footer') %>

@@ -1,0 +1,180 @@
+    <script>
+		new Vue({
+        el: '#q-app',
+        data: function () {
+          return {
+				drawerState: true,
+				columns_currency: [
+              		{ name: 'currency', label: '货币 Currency', align: 'left', field: 'currency', sortable: true },
+              		{ name: 'amtc', label: 'AMTC', align: 'left', field: 'amtc', sortable: true },
+              		{ name: 'eth', label: 'ETH', align: 'left', field: 'eth', sortable: true },
+              		{ name: 'btc',  label: 'BTC', align: 'left', field: 'btc', sortable: true }
+				],
+				columns_cold: [
+              		{ name: 'coin', label: '货币 Currency', align: 'left', field: 'coin', sortable: true },
+              		{ name: 'address', label: '钱包 Address', align: 'left', field: 'address', sortable: true },
+				],
+				columns_address: [ { name: 'address', required: true, label: '地址 Address', align: 'center', field: 'address', sortable: true } ],
+				pagination_control: { page: 1, rowsPerPage: 10 },
+				selected_addresses: [],
+				separator: 'horizontal',
+				currency_rate_init: JSON.parse('<%- JSON.stringify(data["currency"]) %>'),
+				cold_wallets: JSON.parse('<%- JSON.stringify(data["cold"]) %>'),
+				last_updated: '<%- data.currency.lastUpdated %>',
+				marked_addresses: JSON.parse('<%- JSON.stringify(data["marked"]) %>'),
+				remove_address: false,
+				amtc_rate: '',
+				eth_rate: '',
+				btc_rate: '',
+				password_update: '',
+				password_gas: '',
+				password_wallet: '',
+				address: '',
+				password_add: '',
+				password_remove: '',
+				selected: 'Dashboard',
+				props: JSON.parse('<%- JSON.stringify(dashProps) %>'),
+				expanded: [],
+				color: "primary",
+				settings: JSON.parse('<%- JSON.stringify(viewSettings) %>'),
+				selected_currency: ''
+          }
+        },
+        methods: {
+			change_route: function(link){
+				window.location.href = link;
+			},
+			logout:function(){
+				$.post("/logout")
+					.done(function(data){
+						window.location.replace("/admin/login");
+					})
+			},
+			process_requests: function(id, link, detail, tab){
+				this.$q.loading.show()
+				var data = null;
+				if(id == 'rates_update') data = ($("#ratesUpdate").serialize()+"&currency="+this.selected_currency)
+				else if(id == 'transfer_gas') data = $("#transferGas").serialize()
+				else if(id == 'transfer_wallet') data = $("#transferWallet").serialize()
+				else if(id == 'marked_remove') data = this.selected_addresses
+				else if(id == 'marked_add') data = $("#markedAdd").serialize()
+				
+				var self = this;
+				if(id != "rates_refresh"){
+					var json_arr = (id == 'marked_remove' ? { data: this.create_array(data, "address"), password: this.password_remove } : data);
+
+					$.post('/'+link, json_arr, function (data, status, request) {
+						setTimeout(function(){
+							self.$q.loading.hide();
+							if(data["error"]){
+								self.$q.notify({ message:  '失败! <translation here>!', timeout: 3000, type: 'negative', color: 'negative', textColor: 'white', position: 'top-right', detail: 'Failed! ' + data["error"] + '!'});
+							} else {
+								self.$q.notify({ message: '成功 Success!', timeout: 3000, type: 'positive', color: 'positive', textColor: 'white', position: 'top-right', detail: detail});
+							
+								if(id == 'rates_update'){
+									self.$data.currency_rate_init = data["result"]
+									self.$data.amtc_rate = ''
+									self.$data.eth_rate = ''
+									self.$data.btc_rate = ''
+									self.$data.password_update = ''
+									self.$data.last_updated = data["result"]["lastUpdated"]
+								} else if(id == 'transfer_gas'){
+									self.$data.password_gas = ''
+								} else if(id == 'transfer_wallet'){
+									self.$data.password_wallet = ''
+								} else if(id == 'marked_remove'){
+									self.$data.selected_addresses = [];
+									self.$data.password_remove = ''
+									self.$data.marked_addresses = data["result"]
+								} else if(id == 'marked_add'){
+									self.$data.address = ""
+									self.$data.password_add = ""
+									self.$data.marked_addresses = data["result"]
+								}
+							}
+						}, 500);
+					});
+				} else {
+					$.get('/'+link, function (data, status, request) {
+						setTimeout(function(){
+							self.$q.loading.hide();
+							if(data["error"]){
+								self.$q.notify({ message: '失败! <translation here>!', timeout: 3000, type: 'negative', color: 'negative', textColor: 'white', position: 'top-right', detail: 'Failed!' + data["error"] + '!'});
+							} else {
+								self.$q.notify({ message: '成功 Success!', timeout: 3000, type: 'positive', color: 'positive', textColor: 'white', position: 'top-right', detail: detail});
+								self.$data.currency_rate_init = data
+								self.$data.last_updated = data["lastUpdated"]
+							}
+						}, 500);
+					});
+				}
+			},
+			create_array: function(arr, index){ // Creates an array of selected entries
+				var new_arr = [];
+				for(var i = 0; i < arr.length; i++){
+					new_arr.push(arr[i][index]);
+				}
+				return new_arr;
+			},
+			add_commas: function(value, checker){
+					var total_amount = (Big(value).toFixed()).split(".");
+					total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+					if(checker){
+						return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);
+					}
+					return total_amount[0]
+			},
+		},
+		computed: {
+			currency_rate: function(){
+				if(!jQuery.isEmptyObject(this.currency_rate_init)){
+					var cny = this.currency_rate_init["CNY"]
+					cny["currency"] = "CNY"
+
+					if(this.settings.user == 'ag') return [cny]
+					
+					var usd = this.currency_rate_init["USD"]
+					usd["currency"] = "USD"
+					var php = this.currency_rate_init["PHP"]
+					php["currency"] = "PHP"
+					return [usd, cny, php]
+				}
+				return []
+			},
+			view_toggle: function(){
+				return (window.location.pathname).includes("transactions") || (window.location.pathname).includes("requests")
+			},
+			visible_currency: function(){
+				if(this.settings.user == 'ag') return ['currency', 'amtc']
+				return ['currency', 'amtc', 'eth', 'btc']
+			},
+			visible_cold: function(){
+				return ['coin', 'address']
+			},
+			select_currency: function(){
+				if(this.settings.user == 'ag') return [{ label: 'CNY', value: 'CNY' }]
+				return [ { label: 'USD', value: 'USD' }, { label: 'CNY', value: 'CNY' }, { label: 'PHP', value: 'PHP' } ]
+			},			
+        },
+        watch: {
+			selected: function(newVal, oldVal){
+				loadRoute(this, newVal)
+			},
+        },
+        beforeMount(){
+
+				$.get('/getColdWallet', function (data, status, request) {
+					console.log("retrieved cold wallets");
+					self.cold_wallets;
+				})
+					if(this.settings.user === "ag"){
+						this.selected_currency = "CNY";
+					} else {
+						this.selected_currency = "USD";
+					}
+            Quasar.i18n.set(Quasar.i18n.zhHans)
+        }
+      })
+    </script>
+</body>
+</html>

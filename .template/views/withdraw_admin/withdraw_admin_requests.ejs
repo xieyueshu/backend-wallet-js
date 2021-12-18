@@ -1,0 +1,146 @@
+<%- include('../dashboard/dashboard_header') %>
+        <!-- DEPOSIT Requests -->
+        <q-table title="提现请求需要批准 Deposit Requests Requiring Approval" :data="tableData" :columns="columns_requests" :pagination.sync="pagination_control" @request="update_data"
+            :visible-columns="visible_requests" :separator="separator" row-key="_id" :color="color" v-if="['pending', 'approved', 'rejected'].includes(tab_status)"
+            :selection="tabSelect" :selected.sync="selected_requests" :class="'container-table table-control-2 bg-white margin-bottom-slash '+filter">
+
+            <template slot="top-selection" slot-scope="props">
+                <!-- May 12 2020 (Danie) - added settings checking to show approve button for redected requests -->
+                <div v-if="tab_status === 'rejected' && settings.approve_rejected_requests">
+                    <q-btn type="submit" glossy :color="color" label="批准 Approve" class="q-mr-sm" @click="process_requests('rejected', 'approveRejectedWithdrawal', ' Approve Rejected Withdraw Requests', 'rejectedRequests')" />
+                </div>
+                <div  v-if="tab_status === 'pending'" style="display:flex;">
+                    <div class="col-md-1 col-sm-6 col-xs-6">
+                        <q-btn type="submit" glossy :color="color" label="批准 Approve" class="q-mr-sm" @click="process_requests('pending', 'approveWithdrawal', '通过提现请求 Approve Withdraw Requests', 'pendingRequests')" />
+                    </div>
+                    <div class="col-md-1 col-sm-6 col-xs-6">
+                        <q-btn type="submit" glossy :color="color" label="拒绝 Reject" class="q-mr-sm" @click="process_requests('pending', 'rejectWithdrawal', ' Reject Withdraw Requests', 'pendingRequests')" />
+                    </div>
+                </div>
+            </template>
+
+            <template slot="top-right" slot-scope="props">
+                <span>总金额 Total Amount: {{totalAmount}}</span>
+            </template>
+
+            
+            <template slot="top-left" slot-scope="props">
+                    <div class="row add-margin-right">
+                            <center><q-btn-toggle glossy class="toggle-control bg-grey-4" v-model="filter" v-if="view_toggle"
+                                :toggle-color="color" :options="toggle_options"></q-btn-toggle></center>
+                        </div>
+                    <div class="row">
+                        <q-select :color="color" v-model="tab_status" :options="select_request" class="form-control-2"></q-select>
+                    </div>
+            </template>
+            
+            <q-td slot="body-cell-transactions" slot-scope="props" :props="props">    
+                <q-table dense hide-bottom :data="props.row.transactions" :columns="columns_sub_requests" :visible-columns="visible_sub_requests" 
+                    :separator="separator" :color="color" class="container-table as" ></q-table>
+            </q-td>
+        </q-table>
+        
+        <!-- WITHDRAW SETTINGS -->
+        <q-card v-else id="settings" :class="'container-form table-control-2 bg-white margin-bottom-slash '+filter">
+            <div class="text-primary container-title-2">
+                    <div class="row add-margin-right">
+                            <center><q-btn-toggle glossy class="toggle-control bg-grey-4" v-model="filter" v-if="view_toggle"
+                                :toggle-color="color" :options="toggle_options"></q-btn-toggle></center>
+                        </div>
+                <q-select :color="color" v-model="tab_status" :options="select_request" class="form-control-2"></q-select>
+            </div>
+            <q-card-main class="q-pa-none">
+                <div v-if="filter == 'amt' || filter === 'amt_a'">
+                    <q-field icon="account_box" :label-width="3" label="AMT HOT WALLET" class="form-control">
+                        <span class="adjust-font-size overflow-wrap-control">{{ hot_wallet }}</span>
+                    </q-field>
+                    
+                    <q-field icon="timelapse" :label-width="3" label="<%- viewSettings.coin_names.amt || 'AMT' %>" class="form-control">
+                        <span class="adjust-font-size overflow-wrap-control">{{ amt }}</span>
+                    </q-field>
+                </div>
+                <div v-if="filter == 'amt_a'">
+                    <q-field icon="timelapse" :label-width="3" label="<%- viewSettings.coin_names.amt_a || 'AMT Asset' %>" class="form-control">
+                        <span class="adjust-font-size overflow-wrap-control">{{ amt_a }}</span>
+                    </q-field>
+                </div>
+                <div v-if="filter == 'eth' || filter == 'amtc'">
+                    <q-field icon="account_box" :label-width="3" label="ETH HOT WALLET" class="form-control">
+                        <a :href="hot_wallet_link" :loading="load_settings" @click="hot_wallet_page" target="_blank">
+                            <span class="adjust-font-size overflow-wrap-control">{{ hot_wallet }}</span>
+                        </a>
+                    </q-field>
+                    
+                    <q-field icon="explore" :label-width="3" label="<%- viewSettings.coin_names.eth || 'ETH' %>" class="form-control">
+                        <span class="adjust-font-size overflow-wrap-control">{{ eth }}</span>
+                    </q-field>
+                    
+                    <div v-if="filter == 'amtc'">
+                    <q-field icon="timelapse" :label-width="3" label="<%- viewSettings.coin_names.amtc || 'ETH Token' %>" class="form-control">
+                        <span class="adjust-font-size overflow-wrap-control">{{ amtc }}</span>
+                    </q-field>
+                    </div>
+                </div>
+                <div v-if="filter == 'btc' || filter == 'omni'">
+                    <q-field icon="account_box" :label-width="3" label="BTC HOT WALLET" class="form-control">
+                        <a :href="hot_wallet_link" :loading="load_settings" @click="hot_wallet_page" target="_blank">
+                            <span class="adjust-font-size overflow-wrap-control">{{ hot_wallet }}</span>
+                        </a>
+                    </q-field>
+                    
+                    <q-field icon="explore" :label-width="3" label="<%- viewSettings.coin_names.btc || 'BTC' %>" class="form-control">
+                        <span class="adjust-font-size overflow-wrap-control">{{ btc }}</span>
+                    </q-field>
+                    
+                    <div v-if="filter == 'omni'">
+                    <q-field icon="timelapse" :label-width="3" label="<%- viewSettings.coin_names.omni || 'OMNI' %>" class="form-control">
+                        <span class="adjust-font-size overflow-wrap-control">{{ omni }}</span>
+                    </q-field>
+                    </div>
+                </div>
+                <!-- Sept 8 2020 (danie) - added trx support -->
+                <div v-if="filter == 'trx' || filter == 'trc20'">
+                    <q-field icon="account_box" :label-width="3" label="TRX HOT WALLET" class="form-control">
+                        <a :href="hot_wallet_link" :loading="load_settings" @click="hot_wallet_page" target="_blank">
+                            <span class="adjust-font-size overflow-wrap-control">{{ hot_wallet }}</span>
+                        </a>
+                    </q-field>
+                    
+                    <q-field icon="explore" :label-width="3" label="<%- viewSettings.coin_names.trx || 'TRX' %>" class="form-control">
+                        <span class="adjust-font-size overflow-wrap-control">{{ trx }}</span>
+                    </q-field>
+                    
+                    <div v-if="filter == 'trc20'">
+                        <q-field icon="timelapse" :label-width="3" label="<%- viewSettings.coin_names.omni || 'OMNI' %>" class="form-control">
+                            <span class="adjust-font-size overflow-wrap-control">{{ trc20 }}</span>
+                        </q-field>
+                        </div>
+                </div>
+            
+            <form id="form_settings" @submit.prevent="process_requests('settings', 'setSetting', '提交提现设置 Submit Withdraw Settings', 'settings')">
+                <!-- Sep 29 2020 (danie) - added withdraw approval for all requests -->
+                <q-checkbox label = "Require Approval for ALL Requests" v-model="withdraw_approval_forced" id="withdraw_approval_forced" @input="requireWithdraw()" required></q-checkbox>
+                
+                <q-input type="number" placeholder="批准门槛 Approval Threshold" float-label="批准门槛 Approval Threshold" stack-label="批准门槛 Approval Threshold" v-if="threshold_visible"
+                    class="form-control" name="value" required="true" v-model="withdraw_approval" id="withdraw_approval" :loading="load_settings" :disable="load_settings"></q-input>
+
+                <q-input type="password" placeholder="密码 Password" float-label="密码 Password" stack-label="密码 Password"
+                    class="form-control" name="password" required="true" v-model="password" :disable="load_settings" required></q-input>
+
+                <q-btn :color="color" glossy size="md" label="提交 Submit" class="form-control" type="submit" :disable="load_settings" />
+            </form>
+            </q-card-main>
+        </q-card>
+        </div>
+        </q-card-main>
+        </q-card>
+    </q-page-container>
+    </q-layout>
+</div>
+
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.min.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<script src="/scripts/big.min.js"></script>
+<%- include('withdraw_admin_requests_footer') %>

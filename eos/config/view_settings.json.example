@@ -1,0 +1,27 @@
+{
+  "user": "default",
+  "coins": ["eth", "amtc", "amt", "amt_a", "btc", "omni"],
+  "coin_colors": {
+    "eth": "cyan-8", 
+    "amtc": "cyan-10",
+    "amt": "deep-purple-5",
+    "amt_a": "deep-purple-9",
+    "btc": "light-blue-8",
+    "omni": "light-blue-10"
+  },
+  "coin_names":{
+    "eth": "ETH",
+    "amtc": "EMTS",
+    "amt": "AMTC",
+    "amt_a": "CZDT",
+    "btc": "BTC",
+    "omni": "USDT"
+  },
+  "coin_token_match" : {
+    "eth": "amtc",
+    "amt": "amt_a",
+    "btc": "omni"
+  },
+  "show_txn_memo": false,
+  "show_conversion": false
+}

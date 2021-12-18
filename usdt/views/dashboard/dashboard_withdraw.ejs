@@ -1,0 +1,104 @@
+<%- include('dashboard_header') %>
+<div id="withdraw">
+    <% if(permissions.indexOf('viewWithdrawRequest') !== -1) { %>
+        <%- include('dashboard_withdraw_balance') %>
+    <% } %>
+    <div class="row">
+        <!-- //WITHDRAW REQUESTS CARD// -->
+        <q-slide-transition>
+        <% if(permissions.indexOf('viewWithdrawRequest') !== -1) { %>
+                
+        <div class="col-md-6 col-sm-12 col-xs-12">
+            <q-card class="tab-control bg-white">
+                <div class="text-primary bg-grey-2 container-title-2"><strong>提现请求 WITHDRAW REQUESTS</strong></div>
+                <q-card-separator></q-card-separator>
+                <q-card-main class="q-pa-none">
+                    <div class="row">
+                        <% for(var i=0; i < viewSettings.coins.length; i++) { %>
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <q-table title="" :data="requests_<%= viewSettings.coins[i] %>" :columns="columns_requests"
+                            :separator="separator" class="container-table" hide-bottom>
+                            <template slot="body" slot-scope="props">
+                                <q-tr :props="props">
+                                    <q-td key="name" :props="props">
+                                        <a :href="'/admin/withdraw/requests/?coin=<%= viewSettings.coins[i] %>&table='+props.row.table">
+                                            <q-btn color="<%= viewSettings.coin_colors[viewSettings.coins[i]] %>"  :label="props.row.name"></q-btn>
+                                        </a>
+                                    </q-td>
+                                    <q-td key="count" :props="props">
+                                        <a :href="'/admin/withdraw/requests/?coin=<%= viewSettings.coins[i] %>&table='+props.row.table">
+                                            <q-btn color="<%= viewSettings.coin_colors[viewSettings.coins[i]] %>"  :label="props.row.count"></q-btn>
+                                        </a>
+                                    </q-td>
+                                    <q-td key="amount" :props="props">
+                                        <a :href="'/admin/withdraw/requests/?coin=<%= viewSettings.coins[i] %>&table='+props.row.table">
+                                            <q-btn color="<%= viewSettings.coin_colors[viewSettings.coins[i]] %>"  :label="props.row.amount"></q-btn>
+                                        </a>
+                                    </q-td>
+                                </q-tr>
+                            </template>
+                            </q-table>
+                        </div>
+                        <% } %>
+                    </div>
+                </q-card-main>
+            </q-card>
+            
+        </div>
+        <% } %>
+        </q-slide-transition>
+
+        <!-- //WITHDRAW TRANSACTIONS CARD//-->
+        <q-slide-transition>
+        <% if(permissions.indexOf('viewWithdraw') !== -1) { %>
+        <div class="col-md-6 col-sm-12 col-xs-12">
+            <q-card class="tab-control bg-white">
+                <div class="text-primary bg-grey-2 container-title-2"><strong>提现交易 WITHDRAW TRANSACTIONS</strong></div>
+            <q-card-separator></q-card-separator>
+            <q-card-main class="q-pa-none">
+                <div class="row">
+                    <% for(var i=0; i < viewSettings.coins.length; i++) { %>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <q-table title="" :data="transactions_<%= viewSettings.coins[i] %>" :columns="columns_transactions"
+                        :separator="separator" class="container-table" hide-bottom>
+                            <template slot="body" slot-scope="props">
+                                <q-tr :props="props">
+                                    <q-td key="name" :props="props">
+                                        <a :href="'/admin/withdraw/transactions/?coin=<%= viewSettings.coins[i] %>&table='+props.row.table">
+                                            <q-btn color="<%= viewSettings.coin_colors[viewSettings.coins[i]] %>"  :label="props.row.name"></q-btn>
+                                        </a>
+                                    </q-td>
+                                    <q-td key="count" :props="props">
+                                        <a :href="'/admin/withdraw/transactions/?coin=<%= viewSettings.coins[i] %>&table='+props.row.table">
+                                            <q-btn color="<%= viewSettings.coin_colors[viewSettings.coins[i]] %>"  :label="props.row.count"></q-btn>        
+                                        </a>
+                                    </q-td>
+                                    <q-td key="amount" :props="props">
+                                        <a :href="'/admin/withdraw/transactions/?coin=<%= viewSettings.coins[i] %>&table='+props.row.table">
+                                            <q-btn color="<%= viewSettings.coin_colors[viewSettings.coins[i]] %>"  :label="props.row.amount"></q-btn>
+                                        </a>
+                                    </q-td>
+                                </q-tr>
+                            </template>
+                        </q-table>
+                    </div>
+                    <% } %>
+                </div>
+            </q-card-main>
+        </q-card>
+        </div>
+        <% } %>
+        </q-slide-transition>
+    </div>
+</div>
+
+
+</q-page-container>
+</q-layout>
+</div>
+
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.min.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<%- include('dashboard_withdraw_footer') %>

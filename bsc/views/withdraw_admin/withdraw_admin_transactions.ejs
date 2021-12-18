@@ -1,0 +1,47 @@
+<%- include('../dashboard/dashboard_header') %>
+        <!-- COMPLETED TRANSACTIONS -->
+        <q-table title="完成的交易 Withdraw Transactions" :data="tableData" :columns="columns_transaction" row-key="_id"
+                :pagination.sync="pagination_control" @request="update_data" :visible-columns="visible_transactions" 
+                :separator="separator" :color="color" :filter="address_filter" :selection="tabSelect" 
+                :selected.sync="selectedTxns" :class="'container-table table-control-2 bg-white margin-bottom-slash '+filter">
+            
+                <template slot="top-selection" slot-scope="props">
+                    <div v-if="tab_status == 'failed'" style="display: flex;">
+                        <div class="col-md-2 col-sm-8 col-xs-8">
+                            <q-btn type="submit" :color="color" label="重新发送 Resend" class="q-mr-sm" @click="process_requests('failed', 'resendFailedTransaction', '重新发送失败交易 Resend Failed Transactions', 'failed')" />
+                        </div>
+                        <div class="col-md-1 col-sm-6 col-xs-6">
+                            <q-btn type="submit" :color="color" label="Complete" class="q-mr-sm" @click="process_requests('complete', 'forceCompleteTransaction', 'Complete Transaction', 'failed')" />
+                        </div>
+                    </div>
+                    <div v-if="tab_status == 'pending'">
+                        <q-btn type="submit" glossy :color="color" label="取消 Cancel" class="q-mr-sm" :style="{marginTop: '-2px', marginBottom: '-2px'}" 
+                                @click="process_requests('fail', 'failPendingTransaction', ' Reject Pending Transactions', 'pending')"></q-btn>
+                    </div>
+                </template>
+                <template slot="top-right" slot-scope="props">
+                    <span>总金额 Total Amount: {{totalAmount}}</span>
+                </template>
+                <template slot="top-left" slot-scope="props">
+                    <div class="row add-margin-right">
+                        <center><q-btn-toggle glossy class="toggle-control bg-grey-4 q-mr-sm" v-model="filter" v-if="view_toggle"
+                            :toggle-color="color" :options="toggle_options"></q-btn-toggle></center>
+                    </div>
+                    <div class="row">
+                        <q-select :color="color" v-model="tab_status" :options="select_transaction" class="form-control-2"></q-select>
+                    </div>
+                    <!-- <div class="row" style="width:200px;">
+                        <q-search hide-underline :color="color" v-model="address_filter" />
+                    </div> -->
+                </template>
+        </q-table>
+    </q-page-container>
+    </q-layout>
+</div>
+
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.min.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<script src="/scripts/big.min.js"></script>
+<%- include('withdraw_admin_transactions_footer') %>

@@ -1,0 +1,206 @@
+<script>
+    new Vue({
+        el: '#q-app',
+        data: function () {
+            return {
+                filter: '',
+                drawerState: true,
+                tab_status: 'completed',
+                deposit_filter: '',
+                columns_transaction: [{
+                        name: '_id',
+                        label: 'id',
+                        align: 'left',
+                        field: '_id',
+                        sortable: true
+                    },
+                    {
+                        name: 'recepient',
+                        required: true,
+                        label: '地址 Address',
+                        align: 'left',
+                        field: 'recepient',
+                        sortable: true
+                    },
+                    {
+                        name: 'sender',
+                        required: true,
+                        label: '发件人 Sender',
+                        align: 'left',
+                        field: 'sender',
+                        sortable: true
+                    },
+                    {
+                        name: 'amount',
+                        required: true,
+                        label: '金额 Amount',
+                        align: 'left',
+                        field: 'amount',
+                        sortable: true,
+                        format: function (value, row) {
+                            var total_amount = (Big(value).toFixed()).split(".");
+                            total_amount[0] = total_amount[0].toString().replace(
+                                /\B(?=(\d{3})+(?!\d))/g, ",");
+                            return total_amount[0] + "." + (total_amount.length == 1 ? "00" :
+                                total_amount[1]);
+                        },
+                        sort: (a, b) => parseFloat(a) - parseFloat(b)
+                    },
+                    {
+                        name: 'txnHash',
+                        required: true,
+                        label: '交易哈希 Transaction Hash',
+                        align: 'left',
+                        field: 'txnHash',
+                        sortable: true
+                    },
+                    {
+                        name: 'createTime',
+                        label: '建立时间 Creation Time',
+                        align: 'left',
+                        field: 'createTime',
+                        sortable: true,
+                        format: function (value, row) {
+                            return new Date(value).toLocaleString();
+                        }
+                    }
+                ],
+                total_completed: 0,
+                visible_transactions: ['recepient', 'amount', 'txnHash', 'createTime'],
+                separator: 'horizontal',
+                pagination_control: {
+                    rowsPerPage: 10,
+                    page: 1,
+                    sortBy: "createTime",
+                    descending: false
+                },
+                completed: [],
+                check_status: 'no',
+                chk_filter: true,
+                select_deposit: [{
+                    label: '完成的交易 Completed Transactions',
+                    value: 'completed'
+                }],
+                selected: 'Deposit',
+                props: JSON.parse('<%- JSON.stringify(dashProps) %>'),
+                settings: JSON.parse('<%- JSON.stringify(viewSettings) %>'),
+            }
+        },
+        methods: {
+            change_route: function (link) {
+                window.location.href = link;
+            },
+            create_array: function (arr, index) { // Creates an array of selected entries
+                var new_arr = [];
+                for (var i = 0; i < arr.length; i++) {
+                    new_arr.push(arr[i][index]);
+                }
+                return new_arr;
+            },
+            calc_total: function (table, table_name) {
+                let total = [];
+                Object.entries(table).forEach(([key, val]) => {
+                    total.push(parseFloat(val.amount))
+                });
+                var total_amount = (Big(total.reduce(function (total, num) {
+                    return total + num
+                }, 0)).toFixed()).split(".");
+                total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);
+            },
+            logout: function () {
+                $.post("/logout")
+                    .done(function (data) {
+                        window.location.replace("/admin/login");
+                    })
+            },
+            update_data: function (settings) {
+                
+                var path = (window.location.href).split("?")
+                var params = (path[1] ? path[1].split("&") : false)
+                var temp = (params[0] ? params[0].split("=") : false)
+                var coinType = (temp[0] ? temp[1] : false)
+
+                var self = this
+                if(!settings){
+                    settings = {pagination: self.$data.pagination_control, filter: self.$data.address_filter};
+                }
+                this.filter = coinType ? coinType : this.settings.coins[0];
+                settings.coinType = this.filter;
+                self.retrieve_data(settings).then(function(res) {
+                    self.$data.pagination_control = settings.pagination;
+                    self.$data.pagination_control.rowsNumber = res.count;
+                    self.$data.completed = res.data;
+                    if(res.data.length > 0) {
+                        self.$data.total_completed = add_commas(res.totals, true);
+                    }
+                    self.$q.loading.hide();
+                });
+
+                if (this.chk_filter) this.chk_filter = false
+            },
+            retrieve_data: function (settings) {
+                const query = { txnType: "D", status: "L", coinType: settings.coinType.toUpperCase(), page: settings.pagination.page, count: settings.pagination.rowsPerPage, 
+                    sort: settings.pagination.sortBy, sortDir: settings.pagination.descending ? "desc" : "asc"  };
+                return fetch(`/getTransaction?` + new URLSearchParams(query))
+                    .then(res => res.json())
+                    .then(res => {
+                        this.$q.loading.hide()
+                        return res;
+                    });
+            },
+            change_query: function () {
+                var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname +
+                    '?coin=' + this.filter;
+                window.history.pushState({
+                    path: newurl
+                }, '', newurl);
+                this.update_data()
+            }
+        },
+        computed: {
+            color: function () {
+                this.selected_transactions = []
+                this.selected_pending = []
+                this.selected_rejected = []
+                this.check_status = "no"
+                const color = this.settings.coin_colors;
+                return color[this.filter];
+            },
+            toggle_options: function () {
+                let options = [];
+                for (let i = 0; i < this.settings.coins.length; i++) {
+                    let coin = this.settings.coins[i];
+                    options.push({
+                        label: this.settings.coin_names[coin] ||  coin.toUpperCase(),
+                        value: coin
+                    });
+                }
+                return options;
+            }
+        },
+        watch: {
+			selected: function(newVal, oldVal){
+				loadRoute(this, newVal)
+			},
+            filter: function (newVal, oldVal) {
+                this.$q.loading.show()
+                if (this.chk_filter) this.chk_filter = false
+                else this.change_query()
+            }
+        },
+        beforeMount() {
+            this.$q.loading.show()
+            Quasar.i18n.set(Quasar.i18n.zhHans)
+            this.update_data()
+            var self = this;
+            setInterval(function () {
+                self.$q.loading.show()
+                self.update_data()
+            }, 30000);
+        }
+    })
+</script>
+</body>
+
+</html>

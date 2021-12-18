@@ -1,0 +1,20 @@
+<script>
+		new Vue({
+        el: '#q-app',
+        data: function () {
+          return {
+            drawerState: true
+          }
+        },
+        methods: {
+          go_back: function(){
+            window.history.back()
+          }
+        },
+        beforeMount(){
+            Quasar.i18n.set(Quasar.i18n.zhHans)
+        }
+      })
+    </script>
+</body>
+</html>

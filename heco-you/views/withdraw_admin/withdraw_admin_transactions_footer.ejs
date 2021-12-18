@@ -1,0 +1,254 @@
+<script>
+        new Vue({
+        el: '#q-app',
+        data: function () {
+          return {
+            tabSelect: "none",
+            totalAmount: 0,
+            tab_status: '',
+            filter: 'amtc',
+            drawerState: true,
+            columns_transaction: [
+              { name: '_id', label: 'id', align: 'left', field: '_id', sortable: true },
+              { name: 'nonce', label: 'Nonce', align: 'left', field: 'nonce', sortable: true},
+              { name: 'recepient', required: true, label: '地址 Address', align: 'left', field: 'recepient', sortable: true },
+              { name: 'amount', required: true, label: '金额 Amount', align: 'left', field: 'amount', sortable: true, 
+              format:function(value, row){ var total_amount = (Big(value).toFixed()).split("."); total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+              return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]); }, sort: (a,b) => parseFloat(a) - parseFloat(b) },
+              { name: 'txnHash', required: true, label: '交易哈希 Transaction Hash', align: 'left', field: 'txnHash', sortable: true },
+              { name: 'timeStamp', label: 'Completion Time', align: 'left', field: 'timeStamp', sortable: true, format:function(value, row){ return new Date(value).toISOString();} },
+              { name: 'createTime', label: '建立时间 Creation Time', align: 'left', field: 'createTime', sortable: true, format:function(value, row){ return new Date(value).toISOString();} },
+              { name: 'trace', label: 'Trace', align: 'left', field: 'trace', sortable: true}
+            ],
+            visible_transactions: ['nonce', 'recepient', 'amount', 'txnHash', 'createTime', "trace"],
+            selectedTxns: [],
+            selected_to_reject: [],
+            list_can_reject: [],
+            list_can_reject_ids: [],
+            separator: 'horizontal',
+            pagination_control: {rowsPerPage: 10, page: 1, sortBy: "createTime", descending: true},
+            tableData: [],
+            address_filter: '',
+            check_status: 'no',
+            chk_tab_status: true,
+            chk_filter: true,
+            selected: 'Transactions',
+            props: JSON.parse('<%- JSON.stringify(dashProps) %>'),
+            //expanded: ['Withdraw'],
+            select_transaction: [ { label: '完成的交易 Completed Transactions', value: 'completed' },
+                { label: '失败的交易 Failed Transactions', value: 'failed' }, { label:'正在处理的交易 Pending Transactions', value: 'pending' }],
+            settings: JSON.parse('<%- JSON.stringify(viewSettings) %>'),
+          }
+        },
+        methods: {
+			logout:function(){
+				$.post("/logout")
+					.done(function(data){
+						window.location.replace("/admin/login");
+					})
+			},
+            change_route: function(link){
+                window.location.href = link;
+            },
+          create_array: function(arr, index){ // Creates an array of selected entries
+              var new_arr = [];
+              for(var i = 0; i < arr.length; i++){
+                  new_arr.push(arr[i][index]);
+              }
+              return new_arr;
+          },
+          calc_total: function(table, table_name){
+              let total = [];
+                  Object.entries(table).forEach(([key, val]) => {
+                      total.push(parseFloat(val.amount))
+                  });
+              var total_amount = (Big(total.reduce(function(total, num){ return total + num }, 0)).toFixed()).split(".");
+              total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+              return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);
+          },
+          process_requests: function(id, link, detail){
+            if(id === 'fail'){
+                var self = this;
+                this.$q.dialog({
+                    title: '取消 Cancel',
+                    message: '替换交易的矿工费？（默认的是40) Gas price in replacement transaction? (default: 40) ',
+                    prompt: {
+                        model: '',
+                        type: 'number' // optional
+                    },
+                    ok: '继续 Continue',
+                    cancel: '取消 Cancel'
+                }).then(data => {
+                    this.submit_requests(id, self.selected_to_reject, link, detail, {gas: data});
+                }).catch(() => { });
+            } else if (id === 'complete'){
+                var self = this;
+                this.$q.dialog({
+                    title: 'Complete Transaction',
+                    message: 'Transaction Hash of the completed transaction?',
+                    prompt: {
+                        model: '',
+                        type: 'text' // optional
+                    },
+                    ok: '继续 Continue',
+                    cancel: '取消 Cancel'
+                }).then(data => {
+                    this.submit_requests(id, this.create_array(this.selectedTxns, "_id"), link, detail, {hash: data});
+                }).catch(() => { });
+            } else {
+                this.submit_requests(id, this.create_array(this.selectedTxns, "_id"), link,detail);
+            } 
+          },
+          submit_requests: function(id, data, link, detail, addtnlData){
+            var json_arr = { data, coinType: this.filter }
+            if(addtnlData) json_arr = Object.assign(json_arr, addtnlData);
+            var self = this;
+            this.$q.loading.show()
+            $.post('/'+link, json_arr, function (data, status, request) {
+                setTimeout(function(){
+                    self.$q.loading.hide();
+                    if(data["error"]) self.$q.notify({ message: '失败 Failed!', timeout: 3000, type: 'negative', color: 'negative', textColor: 'white', position: 'top-right', detail: data["error"]});
+                    else self.$q.notify({ message: '成功 Success!', timeout: 3000, type: 'positive', color: 'positive', textColor: 'white', position: 'top-right', detail: detail});
+                    
+                    if(id === 'failed' || id === "complete") self.$data.selectedTxns = [];
+                    else self.$data.check_status = "no"
+                    self.update_data();
+                }, 500);
+            });
+          },
+          check_can_reject: function(id){
+              var date = ((new Date().getTime())-(new Date(id["createTime"]).getTime()))/(1000*60*60);
+              delete id["__index"];
+                if(!this.list_can_reject_ids.includes(id["_id"])){
+                    this.list_can_reject.push(id)
+                    this.list_can_reject_ids.push(id["_id"])
+                }
+                return true;
+              return false;
+          },
+          init_data: function() {
+            var path = (window.location.href).split("?")
+            var params = (path[1] ? path[1].split("&") : false)
+            var temp_1 = (params[0] ? params[0].split("=") : false)
+            var temp_2 = (params[1] ? params[1].split("=") : false)
+
+            var coinType = (temp_1[0] == 'coin' ? temp_1[1] : (temp_2[0] == 'coin' ? temp_2[1] : false))
+            var table = (temp_1[0] == 'table' ? temp_1[1] : (temp_2[0] == 'table' ? temp_2[1] : false))
+            
+            this.filter = coinType ? coinType : this.settings.coins[0];
+            this.tab_status = (table ? table : "completed")
+            
+            switch(this.tab_status) {
+                case("pending"): case("failed"): this.tabSelect = "multiple"; break;
+                default: this.tabSelect = "none";
+            }
+
+          }, 
+          update_data: function(settings){
+            var self = this
+            self.$q.loading.show()
+              
+            if(!settings){
+                settings = {pagination: self.$data.pagination_control, filter: self.$data.address_filter};
+            }
+            settings.table = this.tab_status;
+            settings.coinType = this.filter.toUpperCase();
+
+            self.retrieve_data(settings).then(function(res) {
+                self.$data.pagination_control = settings.pagination;
+                self.$data.pagination_control.rowsNumber = res.count;
+                self.$data.tableData = res.data;
+                if(res.data.length > 0) {
+                    self.$data.totalAmount = add_commas(res.totals, true);
+                }
+                self.$q.loading.hide();
+            });
+
+            if(this.chk_tab_status){
+                this.chk_tab_status = false
+                this.chk_filter = false
+            }
+          },
+          retrieve_data: function(settings){
+            const query = { txnType: "W", coinType: settings.coinType, page: settings.pagination.page, count: settings.pagination.rowsPerPage,
+                    sort: settings.pagination.sortBy, sortDir: settings.pagination.descending ? "desc" : "asc"  };
+            switch(settings.table) {
+                case "pending": 
+                    query.status = "P"; break;
+                case "completed": 
+                    query.status = "L";break;
+                case "failed": 
+                    query.status = "X"; query.manualResend = false; break;
+            }
+            return fetch(`/getTransaction?` + new URLSearchParams(query))
+                .then(res => res.json())
+                .then(res => {
+                    return res;
+                });
+          },
+            change_query: function(){
+                var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?coin='+this.filter+"&table="+this.tab_status;
+                window.history.pushState({path:newurl},'',newurl);
+                this.init_data()
+                this.update_data()
+            }
+        },
+        computed: {
+            color: function(){
+                this.selectedTxns = []
+                this.selected_pending = []
+                this.selected_rejected = []
+                this.check_status = "no"
+                const color = this.settings.coin_colors;
+                return color[this.filter];
+            },
+			view_toggle: function(){
+				return (window.location.pathname).includes("transactions") || (window.location.pathname).includes("requests")
+			},
+            toggle_options: function(){
+                let options = [];
+                for(let i = 0; i < this.settings.coins.length; i++) {
+                    let coin = this.settings.coins[i];
+                    options.push({
+                        label: this.settings.coin_names[coin] ||  coin.toUpperCase(),
+                        value: coin
+                    });
+                }
+                return options;
+            }
+        },
+        watch: {
+            selected_to_reject: function(newVal, oldVal){
+                if(newVal.length == this.list_can_reject.length) this.check_status = "yes"
+                else if(newVal.length == 0) this.check_status = "no"
+                else this.check_status = "none"
+            },
+            check_status: function(newVal, oldVal){
+                if(newVal == "yes") this.selected_to_reject = this.list_can_reject_ids
+                else if(newVal == "no") this.selected_to_reject = []
+            },
+			selected: function(newVal, oldVal){
+				loadRoute(this, newVal)
+			},
+            tab_status: function(newVal, oldVal){
+                if(this.chk_tab_status) this.chk_tab_status = false
+                else this.change_query()
+            },
+            filter: function(newVal, oldVal){
+                if(this.chk_filter) this.chk_filter = false
+                else this.change_query()
+            }
+        },
+        beforeMount(){
+            Quasar.i18n.set(Quasar.i18n.zhHans)
+            this.init_data()
+            this.update_data()
+            var self = this
+            setInterval(function(){
+                self.update_data()
+            }, 30000);
+        }
+      })
+    </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<script src="/scripts/big.min.js"></script>
+<script>
+new Vue({
+  el: '#q-app',
+  data: function () {
+    return {
+      drawerState: true,
+      separator: 'horizontal',
+      selected: 'Withdraw',
+      visible: ["label"],
+      columns:[{ name: 'label', label: 'Permissions', field: 'label', align:"left", sortable: true }, { name: 'code', label: 'Code', field: 'code' }],
+      props: JSON.parse('<%- JSON.stringify(dashProps) %>'),
+      username: '<%- user.username%>',
+      password: '',
+      confirmPassword: '',
+      userPermissions: JSON.parse('<%- JSON.stringify(user.permissions) %>'),
+      selectedPermissions:[],
+      color: "primary",
+      settings: JSON.parse('<%- JSON.stringify(viewSettings) %>'),
+      permissions: JSON.parse('<%- JSON.stringify(userPermissions) %>'),
+      paginationControl: { rowsPerPage: 0 },
+      submitLabel:'<%- title %>'
+    }
+  },
+  methods: {
+    change_route: function(link){
+      window.location.href = link;
+    },
+    logout:function(){
+      $.post("/logout")
+        .done(function(data){
+          window.location.replace("/admin/login");
+        })
+    },
+    submit: function(){
+      if(this.password !== this.confirmPassword){
+        this.$q.notify({ message: 'Error', timeout: 3000, type: 'negative', 
+          color: 'negative', textColor: 'white', position: 'top-right', detail: "Passwords don't match"});
+        return;
+      }
+      const self = this;
+      let newUser = {username: this.username, password: this.password, permissions: this.selectedPermissions};
+      $.post("/editUser", newUser)
+        .done(function(data){
+          if(data.error){
+            self.$q.notify({ message:  'Error', timeout: 3000, type: 'negative', 
+              color: 'negative', textColor: 'white', position: 'top-right', detail: data.error});
+          } else {
+            let detail = "Successfully added new user " + data.user;
+            if(data.action === "edit")
+              detail = "Successfully edited user " + data.user;
+            self.$q.notify({ message:  'Successful', timeout: 3000, type: 'positive', 
+              color: 'positive', textColor: 'white', position: 'top-right', detail});
+          }
+        })
+    }
+  },
+  watch: {
+    selected: function(newVal, oldVal){
+      loadRoute(this, newVal)
+    },
+  },
+  beforeMount(){
+    const self = this;
+    Quasar.i18n.set(Quasar.i18n.zhHans);
+    this.selectedPermissions = this.permissions.filter((perm) => self.userPermissions.indexOf(perm.code) > -1);
+  }
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<%- include('dashboard_header') %>
+    <div id="withdraw">
+        <div class="row">
+            <!-- HOT WALLET -->
+            <q-slide-transition>
+            <q-card class="tab-control bg-white">
+                    <div class="text-primary bg-grey-2 container-title-2"><strong>HOT WALLET</strong></div>
+                    <q-card-separator></q-card-separator>
+                    <q-card-main class="q-pa-none">
+                        <div class="row pad-all">
+                            <div class="col-md-4 col-sm-12 col-xs-12">
+                                <q-card class="tab-control bg-grey-2">
+                                    <q-card-main class="q-pa-none">
+                                        <q-list link inset-delimiter separator>
+                                            <q-list-header>HOT WALLET ADDRESS</q-list-header>
+                                            <!--
+                                                <q-btn glossy class="expand bg-white text-weight-bold" color="primary" @click="change_route('../admin/withdraw/requests/?table=settings')" flat>
+                                                <q-item-side color="primary"><q-knob :value="100" size="75px"readonly><q-icon name="account_box"></q-icon></q-knob></q-item-side>
+                                                <q-item-main class="overflow-control adjust-font-size">{{ hot_wallet.address }}</q-item-main></q-btn>
+                                                -->
+                                                <div class="row">
+                                                        <div class="col-md-3 col-sm-12 col-xs-12">
+                                                            <center>
+    
+                                                            <q-item-side color="primary">
+                                                                <q-knob size="75px" :value="100" readonly><q-icon name="account_box"></q-icon></q-knob>
+                                                            </q-item-side>
+                                                        </center>
+                                                        </div>
+                                                        <div class="col-md-9 col-sm-12 col-xs-12">
+                                                            <q-item-main class="heighten">
+                                                                <q-btn glossy class="bg-white text-weight-bold expand heighten" color="primary" @click="change_route('../admin/withdraw/requests/?table=settings')" flat>
+                                                                    <span class="overflow-control">{{ hot_wallet.address }}</span>
+                                                                </q-btn>
+                                                            </q-item-main>
+                                                        </div>
+                                                    </div>
+                                        </q-list>
+                                    </q-card-main>
+                                </q-card>
+                            </div>
+                            <div class="col-md-4 col-sm-12 col-xs-12">
+                                <q-card class="tab-control bg-grey-2">
+                                    <q-card-main class="q-pa-none">
+                                        <q-list link inset-delimiter separator>
+                                            <q-list-header>AMTC BALANCE</q-list-header>
+                                                <div class="row">
+                                                    <div class="col-md-3 col-sm-12 col-xs-12">
+                                                        <center>
+
+                                                        <q-item-side color="amber-10">
+                                                            <q-knob v-model="hot_wallet.amtc" size="75px" :min="0" :max="max_balance" readonly>AMTC</q-knob>
+                                                        </q-item-side>
+                                                    </center>
+                                                    </div>
+                                                    <div class="col-md-9 col-sm-12 col-xs-12">
+                                                        <q-item-main class="adjust-font-size heighten">
+                                                            <q-btn glossy class="bg-white text-weight-bold expand heighten" color="amber-10" @click="change_route('../admin/withdraw/requests/?table=settings')" flat>
+                                                                <span class="overflow-control">{{ hot_wallet.amtc_display }}</span>
+                                                            </q-btn>
+                                                        </q-item-main>
+                                                    </div>
+                                                </div>
+                                        </q-list>
+                                    </q-card-main>
+                                </q-card>
+                            </div>
+                            <div class="col-md-4 col-sm-12 col-xs-12">
+                                <q-card class="tab-control bg-grey-2">
+                                    <q-card-main class="q-pa-none">
+                                        <q-list link inset-delimiter separator>
+                                            <q-list-header>ETH BALANCE</q-list-header>
+                                            <div class="row">
+                                                    <div class="col-md-3 col-sm-12 col-xs-12">
+                                                        <center>
+                                                        <q-item-side color="secondary">
+                                                            <q-knob v-model="hot_wallet.eth" size="75px" :min="0" :max="max_balance" readonly>ETH</q-knob>
+                                                        </q-item-side>
+                                                    </center>
+                                                    </div>
+                                                    <div class="col-md-9 col-sm-12 col-xs-12">
+                                                        <q-item-main class="adjust-font-size heighten">
+                                                            <q-btn glossy class="bg-white text-weight-bold expand heighten" color="secondary" @click="change_route('../admin/withdraw/requests/?coin=eth&table=settings')" flat>
+                                                                <span class="overflow-control">{{ hot_wallet.eth_display }}</span>
+                                                            </q-btn>
+                                                        </q-item-main>
+                                                    </div>
+                                                </div>
+                                            <!--
+                                                <q-btn glossy class="expand text-weight-bold" color="secondary" @click="change_route('../admin/withdraw/requests/?coin=eth&table=settings')" flat>
+                                                <q-item-side color="secondary">
+                                                    <q-knob v-model="hot_wallet.eth" size="75px" :min="0" :max="max_balance" readonly>ETH</q-knob>
+                                                </q-item-side>
+                                                <q-item-main class="overflow-control adjust-font-size">{{ add_commas(hot_wallet.eth, true) }}</q-item-main>
+                                            </q-btn>
+                                        -->
+                                        </q-list>
+                                    </q-card-main>
+                                </q-card>
+                            </div>
+                        </div>
+                </q-card-main>
+            </q-card>
+        </q-slide-transition>
+        </div>
+        <div class="row">
+            <q-slide-transition>
+            <q-card class="tab-control bg-white">
+                <div class="text-primary bg-grey-2 container-title-2"><strong>WITHDRAW TRANSACTIONS</strong></div>
+                <q-card-separator></q-card-separator>
+                <q-card-main class="q-pa-none">
+                    <div class="row">
+                        <div class="col-md-6 col-sm-12 col-xs-12">
+                            <q-table title="" :data="transactions_amtc" :columns="columns_transactions"
+                            :separator="separator" class="container-table" hide-bottom>
+                                <template slot="body" slot-scope="props">
+                                    <q-tr :props="props">
+                                        <q-td key="name" :props="props"><a :href="'/admin/withdraw/transactions/?coin=amtc&table='+props.row.name"><q-btn color="amber-10" glossy :label="props.row.name"></a></q-btn></q-td>
+                                        <q-td key="count" :props="props"><a :href="'/admin/withdraw/transactions/?coin=amtc&table='+props.row.name"><q-btn color="amber-10" glossy :label="props.row.count"></a></q-btn></q-td>
+                                        <q-td key="amount" :props="props"><a :href="'/admin/withdraw/transactions/?coin=amtc&table='+props.row.name"><q-btn color="amber-10" glossy :label="props.row.amount"></a></q-btn></q-td>
+                                    </q-tr>
+                                </template>
+                            </q-table>
+                        </div>
+                        <div class="col-md-6 col-sm-12 col-xs-12">
+                                <q-table title="" :data="transactions_eth" :columns="columns_transactions"
+                                :separator="separator"class="container-table" hide-bottom>
+                                    <template slot="body" slot-scope="props">
+                                        <q-tr :props="props">
+                                            <q-td key="name" :props="props"><a :href="'/admin/withdraw/transactions/?coin=eth&table='+props.row.name"><q-btn color="secondary" glossy :label="props.row.name"></a></q-btn></q-td>
+                                            <q-td key="count" :props="props"><a :href="'/admin/withdraw/transactions/?coin=eth&table='+props.row.name"><q-btn color="secondary" glossy :label="props.row.count"></a></q-btn></q-td>
+                                            <q-td key="amount" :props="props"><a :href="'/admin/withdraw/transactions/?coin=eth&atable='+props.row.name"><q-btn color="secondary" glossy :label="props.row.amount"></a></q-btn></q-td>
+                                        </q-tr>
+                                    </template>
+                                </q-table>
+                        </div>
+                    </div>
+                </q-card-main>
+            </q-card>
+        </q-slide-transition>
+        </div>
+
+        <div class="row">
+            <q-slide-transition>
+                <q-card class="tab-control bg-white">
+                    <div class="text-primary bg-grey-2 container-title-2"><strong>WITHDRAW REQUESTS</strong></div>
+                    <q-card-separator></q-card-separator>
+                    <q-card-main class="q-pa-none">
+                        <div class="row">
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <q-table title="" :data="requests_amtc" :columns="columns_requests"
+                                :separator="separator" class="container-table" hide-bottom>
+                                    <template slot="body" slot-scope="props">
+                                        <q-tr :props="props">
+                                            <q-td key="name" :props="props"><a :href="'/admin/withdraw/requests/?coin=amtc&table='+props.row.name"><q-btn color="amber-10" glossy :label="props.row.name"></q-btn></a></q-td>
+                                            <q-td key="count" :props="props"><a :href="'/admin/withdraw/requests/?coin=amtc&table='+props.row.name"><q-btn color="amber-10" glossy :label="props.row.count"></q-btn></a></q-td>
+                                            <q-td key="amount" :props="props"><a :href="'/admin/withdraw/requests/?coin=amtc&table='+props.row.name"><q-btn color="amber-10" glossy :label="props.row.amount"></q-btn></a></q-td>
+                                        </q-tr>
+                                    </template>
+                                </q-table>
+                            </div>
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <q-table title="" :data="requests_eth" :columns="columns_requests"
+                                :separator="separator" class="container-table" hide-bottom>
+                                    <template slot="body" slot-scope="props">
+                                        <q-tr :props="props">
+                                            <q-td key="name" :props="props"><a :href="'/admin/withdraw/requests/?coin=eth&table='+props.row.name"><q-btn color="secondary" glossy :label="props.row.name"></q-btn></a></q-td>
+                                            <q-td key="count" :props="props"><a :href="'/admin/withdraw/requests/?coin=eth&table='+props.row.name"><q-btn color="secondary" glossy :label="props.row.count"></q-btn></a></q-td>
+                                            <q-td key="amount" :props="props"><a :href="'/admin/withdraw/requests/?coin=eth&table='+props.row.name"><q-btn color="secondary" glossy  :label="props.row.amount"></q-btn></a></q-td>
+                                        </q-tr>
+                                    </template>
+                                </q-table>
+                            </div>
+                        </div>
+                    </q-card-main>
+                </q-card>
+            </q-slide-transition>
+        </div>
+    </div>
+</q-page-container>
+</q-layout>
+</div>
+
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<%- include('dashboard_withdraw_footer') %>

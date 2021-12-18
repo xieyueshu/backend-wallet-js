@@ -1,0 +1,30 @@
+<!-- Sep 16 2020 (danie) - created gas settings component -->
+<!-- Sep 17 2020 (danie) - added gas multiplier -->
+<div class="col-md-6 col-sm-12 col-xs-12 pad-all">
+    <div class="pad-all">
+        <q-card class="tab-control bg-white">
+            <div class="text-primary bg-grey-2 container-title"><strong> ETH Gas Settings </strong></div>
+            <q-card-separator></q-card-separator>
+            <q-card-main class="q-pa-none">
+                <q-card class="semi-container-form bg-white">
+                    <q-card-main class="q-pa-sm">
+                        <q-input id="gasPrice" name="gasPrice" type="text" class="form-control-2 input-font-size"  :readonly="true" inverted
+                            stack-label="Gas Price (Approximate)" size="60" required="true" value="" v-model="gas_settings.gasPrice"></q-input>
+                        <q-input id="gasPrice" name="gasPrice" type="text" class="form-control-2 input-font-size"  :readonly="true" inverted
+                            stack-label="ETH Gas Requirement" size="60" required="true" value="" v-model="gas_settings.gasAmount"></q-input>
+                        <q-input id="gasMultiplier" name="gasMultiplier" type="text" class="form-control-2 input-font-size" :readonly="readonly_settings" 
+                            stack-label="ETH Gas Multiplier" size="60" required="true" value="" v-model="env_settings.ETH_GAS_PRICE_MULTIPLIER"></q-input>
+                        <q-input id="gasLimit" name="gasLimit" type="text" class="form-control-2 input-font-size" :readonly="readonly_settings" 
+                            stack-label="ETH Gas Transfer Limit" size="60" required="true" value="" v-model="env_settings.ETH_HOT_GAS_TRANSFER"></q-input>
+                        <% if(permissions.indexOf('editSettings') !== -1){ %>
+                            <q-input id="urlPassword" name="urlPassword" type="password" class="form-control-2 input-font-size"
+                                stack-label="Password" size="60" required="true" value="" v-model="gas_password"></q-input>
+                            <q-btn color="primary" id="updateGas" size="md" label="Update ETH Gas Settings" glossy type="update" class="form-control-2 expand" @click="update_gas()"></q-btn>
+                        <% } %>
+                    </q-card-main>
+                </q-card>
+            </q-card-main>
+            &nbsp;
+        </q-card>
+    </div>
+</div>

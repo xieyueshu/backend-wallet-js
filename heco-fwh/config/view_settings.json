@@ -1,0 +1,43 @@
+{
+  "user": "default",
+  "coins": ["amtc"],
+  "coin_colors": {
+    "eth": "cyan-8", 
+    "amtc": "cyan-10",
+    "amt": "deep-purple-5",
+    "amt_a": "deep-purple-9",
+    "btc": "light-blue-8",
+    "omni": "light-blue-10",
+    "fil": "deep-purple-5"
+  },
+  "coin_names":{
+    "eth": "HT",
+    "amtc": "FWH",
+    "amt": "AMTC",
+    "amt_a": "GOT",
+    "btc": "BTC",
+    "fil": "FIL",
+    "omni": "USDT",
+    "trx" : "TRX",
+    "trc20" :"USDT"
+  },
+  "coin_token_match" : {
+    "eth": "amtc",
+    "amt": "amt_a",
+    "btc": "omni",
+    "trx": "trc20"	 
+  },
+  "explorer_link" : {
+    "ETH" : "https://hecoinfo.com/address/${hot_wallet.eth_address}",
+    "HT" : "https://hecoinfo.com/address/${hot_wallet.eth_address}",
+    "AMTC": "https://hecoinfo.com/token/0x0DE5D432642456a75410E556AbD05AC542718fE1?a=${hot_wallet.eth_address}",
+    "FWH": "https://hecoinfo.com/token/0x0DE5D432642456a75410E556AbD05AC542718fE1?a=${hot_wallet.eth_address}",
+    "FIL" : "https://filfox.info/en/address/${hot_wallet.fil_address}",
+    "GOT" : "https://explorer.gott.vip/#/asset-holder/1082750-267-55267/holder/${hot_wallet.amt_a_address}",
+    "BTC" : "https://btc.com/${hot_wallet.btc_address}",
+    "USDT": "https://etherscan.io/token/0xdac17f958d2ee523a2206206994597c13d831ec7?a=${hot_wallet.amtc_address}",	
+    "TRX" : "https://tronscan.org/#/address/${hot_wallet.trx_address}"
+  },
+  "show_conversion": false,
+  "approve_rejected_requests": false
+}

@@ -1,0 +1,70 @@
+<script src="/scripts/big.min.js"></script>
+<script>
+new Vue({
+  el: '#q-app',
+  data: function () {
+    return {
+      drawerState: true,
+      separator: 'horizontal',
+      selected: 'Withdraw',
+      visible: ["username", "edit"],
+      columns:[
+        { name: 'username', label: 'Username', field: 'username', align:"left", sortable: true },
+        { name: 'edit', label: '', field: 'edit', align:"right"}
+      ],
+      props: JSON.parse('<%- JSON.stringify(dashProps) %>'),
+      color: "primary",
+      settings: JSON.parse('<%- JSON.stringify(viewSettings) %>'),
+      permissions: JSON.parse('<%- JSON.stringify(userPermissions) %>'),
+      paginationControl: { rowsPerPage: 10 },
+    }
+  },
+  methods: {
+    change_route: function(link){
+      window.location.href = link;
+    },
+    logout:function(){
+      $.post("/logout")
+        .done(function(data){
+          window.location.replace("/admin/login");
+        })
+    },
+    submit: function(){
+      if(this.password !== this.confirmPassword){
+        this.$q.notify({ message: 'Error', timeout: 3000, type: 'negative', 
+          color: 'negative', textColor: 'white', position: 'top-right', detail: "Passwords don't match"});
+        return;
+      }
+      const self = this;
+      let newUser = {username: this.username, password: this.password, permissions: this.selectedPermissions};
+      $.post("/editUser", newUser)
+        .done(function(data){
+          if(data.error){
+            self.$q.notify({ message:  'Error', timeout: 3000, type: 'negative', 
+              color: 'negative', textColor: 'white', position: 'top-right', detail: data.error});
+          } else {
+            let detail = "Successfully added new user " + data.user;
+            if(data.action === "edit")
+              detail = "Successfully edited user " + data.user;
+            self.$q.notify({ message:  'Successful', timeout: 3000, type: 'positive', 
+              color: 'positive', textColor: 'white', position: 'top-right', detail});
+          }
+        })
+    },
+    editDetails: function(username){
+      this.change_route("/admin/user/details/" + username);
+    }
+  },
+  watch: {
+    selected: function(newVal, oldVal){
+      loadRoute(this, newVal)
+    },
+  },
+  beforeMount(){
+    const self = this;
+    Quasar.i18n.set(Quasar.i18n.zhHans);
+  }
+})
+</script>
+</body>
+</html>

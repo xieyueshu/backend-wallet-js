@@ -1,0 +1,44 @@
+
+<div class="row">
+  <div class="col-md-12 col-sm-12 col-xs-12 pad-all">
+      <div class="pad-all">
+          <q-card class="tab-control bg-white">
+              <div class="text-primary bg-grey-2 container-title"><strong>Transaction Transfer</strong></div>
+              <q-card-separator></q-card-separator>
+              <q-card-main class="q-pa-none">
+                  <q-card class="semi-container-form q-pa-sm" color="primary">
+                      Transfer out an amount sent to a deposit address that isn't detected due to the transger being a different currency. <br/>
+                      Provide the transaction hash and the wallet service will transfer out the amount with gas deducted back to the sender. <br/>
+                  </q-card>
+                  <q-card class="semi-container-form bg-white">
+                      <q-card-main class="q-pa-none">
+                          <form id="markedAdd" @submit.prevent="transfer_hash">
+                              <div class="row semi-form-control">
+                                  <div class="col-md-12 col-sm-12 col-xs-12 col-control separator">
+                                      <q-input id="address" name="address" type="text" class="form-control-2 input-font-size" placeholder="Transaction Hash"
+                                          float-label="Transaction Hash" stack-label="Transaction Hash" size="60" required="true" value="" v-model="hash_form.hash"></q-input>
+                                  </div>
+                                  <div class="col-md-6 col-sm-12 col-xs-12 col-control">
+                                      <q-input type="type" placeholder="Type" float-label="Type" stack-label="Transfer Type"
+                                          class="form-control-2" name="type" id="type_hash" required="true" value="ETH" v-model="hash_form.type" readonly="true"></q-input>
+                                  </div>
+                                  <div class="col-md-6 col-sm-12 col-xs-12 col-control">
+                                      <q-input type="password" placeholder="密码 Password" float-label="密码 Password" stack-label="密码 Password"
+                                          class="form-control-2" name="password" id="password_add" required="true" value="" v-model="hash_form.password"></q-input>
+                                  </div>
+                              </div>
+                              <div class="row pad-vertical">
+                                  <div class="col-md-4 col-sm-4 col-xs-4"></div>
+                                  <div class="col-md-4 col-sm-4 col-xs-4 pad-bottom">
+                                      <q-btn color="primary" id="submitBtnAdd" size="md" label="提交 Submit" glossy type="submit" class="form-control-2 expand"></q-btn>
+                                  </div>
+                              </div>
+                          </form>
+                      </q-card-main>
+                  </q-card>
+              </q-card-main>
+              &nbsp;
+          </q-card>
+      </div>
+  </div>
+</div>

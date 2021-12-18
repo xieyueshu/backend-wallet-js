@@ -1,0 +1,198 @@
+<%- include('dashboard_header') %>
+    <div class="row">
+        <div class="col-md-<%- viewSettings.user == 'ag' ? '4' : '6' %> col-sm-12 col-xs-12 pad-all">
+            <% if(viewSettings.show_conversion){ %>
+            <div class="row pad-all">
+                <q-card class="tab-control bg-white">
+                    <div class="text-primary bg-grey-2 container-title"><strong>费率 RATES</strong></div>
+                    <q-card-separator></q-card-separator>
+                    <q-card-main class="q-pa-none">
+                        <q-slide-transition>
+                        <q-table title="汇率 Currency Rates" :data="currency_rate" :columns="columns_currency" :visible-columns="visible_currency"
+                                    :separator="separator" id="currency_rate" class="container-table bg-white" :hide-bottom="currency_rate.length > 0">
+                            <template slot="top-right" slot-scope="props">
+                                <span v-if="currency_rate.length > 0">最近更新 Last Update: {{ new Date(last_updated).toLocaleString() }}&nbsp;</span>
+                                <span v-else>Refresh to Update</span>
+                                <q-btn round icon="refresh" color="primary" flat
+                                    @click="process_requests('rates_refresh', 'getConversionRate', 'Retrieve Currency Rates', 'dashboard')"></q-btn>
+                            </template>
+                        </q-table>
+                        </q-slide-transition>
+                        <% if(permissions.indexOf('updateRates') !== -1){ %>
+                        <q-slide-transition>
+                        <q-card class="semi-container-form">
+                            <div class="text-primary bg-grey-2 container-title"><strong>更新汇率 UPDATE CURRENCY RATES</strong></div>
+                            <q-card-separator class="bg-light"></q-card-separator>
+                            <q-card-main class="q-pa-none bg-white">
+                                <form id="ratesUpdate" @submit.prevent="process_requests('rates_update', 'setConversionRate', '更新汇率 Update Currency Rates', 'dashboard')">
+                                    <div class="row pad-bottom">
+                                            <div class="col-md-<%- viewSettings.user == 'ag' ? '12' : '6' %> col-sm-12 col-xs-12 col-control">
+                                            <q-field icon="credit_card" color="primary">
+                                                <q-select v-model="selected_currency" :options="select_currency" class="form-control-2"
+                                                    placeholder="货币 Currency" float-label="货币 Currency" stack-label="货币 Currency" name="currency"></q-select>
+                                            </q-field>
+                                            <q-field icon="timelapse">
+                                                <q-input id="amtcRateInput" name="amtcRate" min="0" type="number" class="form-control-2" placeholder="AMTC" float-label="AMTC" stack-label="AMTC"
+                                                    class="form-control-2" required="true" value="" v-model="amtc_rate"></q-input>
+                                            </q-field>
+                                            <% if(viewSettings.user == 'default'){ %>
+                                            <q-field icon="explore">
+                                                <q-input id="ethRateInput" name="ethRate" min="0" type="number" class="form-control-2" placeholder="ETH" float-label="ETH" stack-label="ETH"
+                                                    class="form-control-2" required="true" value="" v-model="eth_rate"></q-input>
+                                            </q-field>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12 col-xs-12 col-control separator">
+                                            <q-field icon="tonality">
+                                                <q-input id="btcRateInput" name="btcRate" min="0" type="number" class="form-control-2" placeholder="BTC" float-label="BTC" stack-label="BTC"
+                                                    class="row form-control-2" required="true" value="" v-model="btc_rate"></q-input>
+                                            </q-field>
+                                            <% } %>
+                                            <q-field icon="lock">
+                                                <q-input type="password" placeholder="密码 Password" float-label="密码 Password" stack-label="密码 Password"
+                                                    class="row form-control-2" name="password" id="password_update" required="true" value="" v-model="password_update"></q-input>
+                                            </q-field>
+                                            <div class="row pad-top">
+                                                <div class="col-md-2 col-sm-2 col-xs-2"></div>
+                                                <div class="col-md-8 col-sm-8 col-xs-8">
+                                                    <q-btn color="primary" id="submitBtnRate" glossy size="md" label="提交 Submit" type="submit" class="form-control-2 expand"></q-btn>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </q-card-main>
+                        </q-card>
+                        </q-slide-transition>
+                        <% } %>
+                    </q-card-main>
+                </q-card>
+            </div>
+            <% } %>
+            <!-- Sep 10 2020 (danie) - Removed permission checking in cold wallet  -->
+            <% if(viewSettings.user == 'default'){ %>
+            <div class="row pad-all">
+                <q-card class="tab-control bg-white">
+                    <div class="text-primary bg-grey-2 container-title"><strong>转账 TRANSFERS</strong></div>
+                    <q-card-separator></q-card-separator>
+                    <q-card-main class="q-pa-none">
+                        <q-slide-transition>
+                        <q-table title="公司钱包 Cold Wallets" :data="cold_wallets" :columns="columns_cold" :visible-columns="visible_cold"
+                                    :separator="separator" id="cold_wallets" class="container-table bg-white" :hide-bottom="true">
+                        </q-table>
+                        </q-slide-transition>
+                        <div class="row form-control-3 margin-top-slash">
+                            <% if(permissions.indexOf('transferGas') !== -1){ %>
+                            <div class="col-md-6 col-sm-12 col-xs-12 col-control separator">
+                                <form id="transferGas" @submit.prevent="process_requests('transfer_gas', 'triggerEthTransfer', '转账费 Transfer GAS', 'dashboard')">
+                                    <q-field icon="lock">
+                                        <q-input type="password" placeholder="密码 Password" float-label="密码 Password" stack-label="密码 Password"
+                                            class="form-control-2" name="password" required="true" value="" v-model="password_gas"></q-input>
+                                    </q-field>
+                                    <div class="row pad-vertical">
+                                        <div class="col-md-2 col-sm-2 col-xs-2"></div>
+                                        <div class="col-md-8 col-sm-8 col-xs-8">
+                                            <q-btn color="primary" id="submitBtnGas" size="md" glossy label="转账费 Transfer GAS" type="submit" class="form-control-2 expand"></q-btn>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <% } %>
+                            <% if(permissions.indexOf('transferCold') !== -1){ %>
+                            <div class="col-md-6 col-sm-12 col-xs-12 col-control">
+                                <form id="transferWallet" @submit.prevent="process_requests('transfer_wallet', 'triggerDeposit', '转账到冷钱包 Transfer to COLD Wallet', 'dashboard')">
+                                    <q-field icon="lock">
+                                        <q-input type="password" placeholder="密码 Password" float-label="密码 Password" stack-label="密码 Password"
+                                            class="form-control-2" name="password" required="true" value="" v-model="password_wallet"></q-input>
+                                    </q-field>
+                                    <div class="row pad-vertical">
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <q-btn color="primary" id="submitBtnWallet" size="md" glossy label="转账到冷钱包 Transfer to COLD wallet" type="submit" class="form-control-2 expand"></q-btn>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <% } %>
+                        </div>
+                    </q-card-main>
+                </q-card>
+            </div>
+            <% } %>
+        </div>
+
+        <% if(viewSettings.user == 'default' && permissions.indexOf('addMarked') !== -1){ %>
+        <div class="col-md-6 col-sm-12 col-xs-12 pad-all">
+            <div class="pad-all">
+                <q-card class="tab-control bg-white">
+                    <div class="text-primary bg-grey-2 container-title"><strong>标记地址 MARKED ADDRESSES</strong></div>
+                    <q-card-separator></q-card-separator>
+                    <q-card-main class="q-pa-none">
+                        <q-table title="标记地址列表 List of Marked Addresses" :data="marked_addresses" :columns="columns_address" :pagination.sync="pagination_control"
+                            color="primary"	:separator="separator" id="currency_address" row-key="__index" class="container-table table-control bg-white" selection="multiple"
+                                :selected.sync="selected_addresses" :hide-bottom="marked_addresses.length > 0 && marked_addresses.length <= 8">
+                            <template slot="top-selection" slot-scope="props">
+                                <form id="markedRemove" @submit.prevent="process_requests('marked_remove', 'removeMarkedAddress', 'Remove Marked Address', 'dashboard')">
+                                    <q-field icon="lock" class="row inline">
+                                        <q-input type="password" placeholder="密码 Password" float-label="密码 Password" stack-label="密码 Password" class="form-control-2 row inline"
+                                            name="password" id="password_remove" required="true" value="" v-model="password_remove"></q-input>&nbsp;
+                                    </q-field>
+                                    <q-btn type="submit" id="submitBtnAdd" color="primary" glossy label="Remove" class="q-mr-sm row inline"></q-btn>
+                                </form>
+                            </template>
+                            <template slot="top-right" slot-scope="props">
+                                <span>总额 Total count: {{ marked_addresses.length }}</span>
+                            </template>
+                        </q-table>
+                        <q-card class="semi-container-form bg-white">
+                            <div class="text-primary bg-grey-2 container-title"><strong>添加标记地址 ADD MARKED ADDRESS</strong></div>
+                            <q-card-separator></q-card-separator>
+                            <q-card-main class="q-pa-none">
+                                <form id="markedAdd" @submit.prevent="process_requests('marked_add', 'addMarkedAddress', '添加标记地址 Add Marked Address', 'dashboard')">
+                                    <div class="row semi-form-control">
+                                        <div class="col-md-6 col-sm-12 col-xs-12 col-control separator">
+                                            <q-field icon="fingerprint">
+                                                <q-input id="address" name="address" type="text" class="form-control-2 input-font-size" placeholder="标记地址 Marked Address"
+                                                    float-label="标记地址 Marked Address" stack-label="标记地址 Marked Address" size="60" required="true" value="" v-model="address"></q-input>
+                                            </q-field>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12 col-xs-12 col-control">
+                                            <q-field icon="lock">
+                                                <q-input type="password" placeholder="密码 Password" float-label="密码 Password" stack-label="密码 Password"
+                                                    class="form-control-2" name="password" id="password_add" required="true" value="" v-model="password_add"></q-input>
+                                            </q-field>
+                                        </div>
+                                    </div>
+                                    <div class="row pad-vertical">
+                                        <div class="col-md-4 col-sm-4 col-xs-4"></div>
+                                        <div class="col-md-4 col-sm-4 col-xs-4 pad-bottom">
+                                            <q-btn color="primary" id="submitBtnAdd" size="md" label="提交 Submit" glossy type="submit" class="form-control-2 expand"></q-btn>
+                                        </div>
+                                    </div>
+                                </form>
+                            </q-card-main>
+                        </q-card>
+                    </q-card-main>
+                    &nbsp;
+                </q-card>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- Sep 10 2020 (danie) - added url settings -->
+        <%- include('settings/dashboard_url_settings') %>
+    </div>
+    <div class="row">
+        <!-- Sep 16 2020 (danie) - added gas settings -->
+        <% if(viewSettings.coins.includes('eth') || viewSettings.coins.includes(viewSettings.coin_token_match.eth)){ %>
+            <%- include('settings/dashboard_gas_settings') %>
+        <% } %>
+
+    </div>
+</q-page-container>
+</q-layout>
+</div>
+
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.min.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<%- include('dashboard_admin_footer') %>

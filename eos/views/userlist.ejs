@@ -1,0 +1,30 @@
+<%- include('dashboard/dashboard_header') %>
+<q-card class="tab-control bg-white" style="width:50%">
+    <div class="text-primary bg-grey-2 container-title">
+        <strong>User List</strong>
+        <q-btn size="sm" round dense color="amber-14" icon="add" @click="change_route('/admin/user/register')" class="q-mr-xs right" />
+    </div>
+    <q-table :data="permissions" :columns="columns" row-key="code" color="secondary" 
+    :visible-columns="visible" :pagination.sync="paginationControl" hide-header>
+        <q-tr slot="body" slot-scope="props" :props="props">
+            <q-td key="username" :props="props">
+                {{props.row.username}}
+            </q-td>
+            <q-td key="edit" :props="props">
+                <q-btn size="sm" round dense color="secondary" icon="create" @click="editDetails(props.row.username)" class="q-mr-xs" />
+            </q-td>
+        </q-tr>
+    </q-table>
+</q-card>
+
+</q-page-container>
+</q-layout>
+
+</div>
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<script src="/scripts/big.min.js"></script>
+
+<%- include('dashboard/dashboard_user_footer') %>

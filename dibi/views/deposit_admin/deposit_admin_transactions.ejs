@@ -1,0 +1,33 @@
+<%- include('../dashboard/dashboard_header') %>
+<!-- COMPLETED TRANSACTIONS -->
+<q-table :data="completed" :columns="columns_transaction" :pagination.sync="pagination_control" @request="update_data"
+    :visible-columns="visible_transactions" :separator="separator" :color="color" id="completed" 
+    :class="'container-table table-control-2 bg-white margin-bottom-slash '+filter"
+    :filter="deposit_filter">
+    <template slot="top-right" slot-scope="props">
+        <span>总金额 Total Amount: {{total_completed}}</span>
+    </template>
+    <template slot="top-left" slot-scope="props">
+        <div class="row add-margin-right">
+            <center>
+                <q-btn-toggle glossy class="toggle-control bg-grey-4" v-model="filter" :toggle-color="color" :options="toggle_options"></q-btn-toggle>
+            </center>
+        </div>
+        <div class="row">
+            <q-select :color="color" v-model="tab_status" :options="select_deposit" class="form-control-2"></q-select>
+        </div>
+        <!-- <div class="row" style="width:200px;">
+            <q-search hide-underline :color="color" v-model="deposit_filter" />
+        </div> -->
+    </template>
+</q-table>
+</q-page-container>
+</q-layout>
+</div>
+
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.min.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<script src="/scripts/big.min.js"></script>
+<%- include('deposit_admin_transactions_footer') %>

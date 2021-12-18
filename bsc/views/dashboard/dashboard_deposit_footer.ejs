@@ -1,0 +1,151 @@
+	<script src="/scripts/big.min.js"></script>
+    <script>
+		new Vue({
+        el: '#q-app',
+        data: function () {
+          return {
+				drawerState: true,
+				columns_transactions: [
+					{ name: 'name', required: true, label: 'Transaction', align: 'left', field: 'name', sortable: true },
+              		{ name: 'count', required: true, label: 'Total Count', align: 'left', field: 'count', sortable: true },
+              		{ name: 'amount', required: true, label: 'Total Amount', align: 'left', field: 'amount', sortable: true }
+				],
+				columns_requests: [
+					{ name: 'name', required: true, label: 'Request', align: 'left', field: 'name', sortable: true },
+              		{ name: 'count', required: true, label: 'Total Count', align: 'left', field: 'count', sortable: true },
+              		{ name: 'amount', required: true, label: 'Total Amount', align: 'left', field: 'amount', sortable: true }
+				],
+				visible_transactions: ['completed', 'failed', 'pending'],
+				separator: 'horizontal',
+				max_balance: 0,
+				transactions_amtc: [{name: "completed", count: "loading...", amount: "loading..."},{name: "failed", count: "loading...", amount: "loading..."},{name: "pending", count: "loading...", amount: "loading..."}],
+				transactions_eth: [{name: "completed", count: "loading...", amount:"loading..."},{name: "failed", count: "loading...", amount: "loading..."},{name: "pending", count: "loading...", amount: "loading..."}],
+				requests_amtc: [{name: "pending", count: "loading...", amount: "loading..."},{name: "approved", count: "loading...", amount: "loading..."},{name: "rejected", count: "loading...", amount: "loading..."}],
+				requests_eth: [{name: "pending", count: "loading...", amount: "loading..."},{name: "approved", count: "loading...", amount: "loading..."},{name: "rejected", count: "loading...", amount: "loading..."}],
+				hot_wallet: {address: "loading...", amtc: 0.00, eth: 0.00, amtc_display: "loading...", eth_display: "loading..."},
+				max_amount_transactions_amtc: 1,
+				max_amount_requests_amtc: 1,
+				max_amount_transactions_eth: 1,
+				max_amount_requests_eth: 1,
+				max_count_transactions_amtc: 1,
+				max_count_requests_amtc: 1,
+				max_count_transactions_eth: 1,
+				max_count_requests_eth: 1,
+				selected: 'Withdraw',
+				props: JSON.parse('<%- JSON.stringify(dashProps) %>'),
+				expanded: [],
+				color: "primary"
+          }
+        },
+        methods: {
+			change_route: function(link){
+				window.location.href = link;
+			},
+			create_array: function(arr, index){ // Creates an array of selected entries
+				var new_arr = [];
+				for(var i = 0; i < arr.length; i++){
+					new_arr.push(arr[i][index]);
+				}
+				return new_arr;
+			},
+			retrieve_data: function(type, filter){
+				return fetch(`/getWithdraw`+type+`/?data=all&coinType=`+filter)
+				.then(res => res.json())
+				.then(res => {
+					return res;
+				});
+			},
+			calc_total: function(table, table_name){
+				let total = [];
+					Object.entries(table).forEach(([key, val]) => {
+						if(table_name.indexOf("Requests") >= 0) total.push(parseFloat(val.totalAmount)) // the value of the current key.
+						else total.push(parseFloat(val.amount))
+					});
+				var total_amount = (Big(total.reduce(function(total, num){ return total + num }, 0)).toFixed())//.split(".");
+				return total_amount
+				/*total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+				return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);*/
+			},
+			add_commas: function(value, checker){
+				var total_amount = (Big(value).toFixed()).split(".");
+				total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+				if(checker){
+					return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);
+				}
+				return total_amount[0]
+			},
+			display_data: function(){
+				var self = this
+				fetch(`/getHotWallet`)
+				.then(res => res.json())
+				.then(res => {
+					self.$data.hot_wallet = {address: res["address"], amtc: Number(res["amtc"]), eth: Number(res["eth"]),
+						amtc_display: this.add_commas(res["amtc"], true), eth_display: this.add_commas(res["eth"], true) }
+					self.$data.max_balance = Math.max(Big(res["amtc"]).toFixed(), Big(res["eth"]).toFixed()) * 1.1
+				});
+
+				this.retrieve_data("Transaction", "amtc").then(function(result){
+					self.$data.transactions_amtc[0]["count"] = self.add_commas(result["completed"].length, false)
+					self.$data.transactions_amtc[0]["amount"] = self.add_commas(self.calc_total(result["completed"], "completed"), true)
+
+					self.$data.transactions_amtc[1]["count"] = self.add_commas(result["failed"].length, false)
+					self.$data.transactions_amtc[1]["amount"] = self.add_commas(self.calc_total(result["failed"], "failed"), true)
+
+					self.$data.transactions_amtc[2]["count"] = self.add_commas(result["pending"].length, false)
+					self.$data.transactions_amtc[2]["amount"] = self.add_commas(self.calc_total(result["pending"], "completed"), true)
+				});
+
+				this.retrieve_data("Request", "amtc").then(function(result){
+					self.$data.requests_amtc[0]["count"] = self.add_commas(result["pending"].length, false)
+					self.$data.requests_amtc[0]["amount"] = self.add_commas(self.calc_total(result["pending"], "pendingRequests"), true)
+
+					self.$data.requests_amtc[1]["count"] = self.add_commas(result["approved"].length, false)
+					self.$data.requests_amtc[1]["amount"] = self.add_commas(self.calc_total(result["approved"], "approvedRequests"), true)
+
+					self.$data.requests_amtc[2]["count"] = self.add_commas(result["rejected"].length, false)
+					self.$data.requests_amtc[2]["amount"] = self.add_commas(self.calc_total(result["rejected"], "rejectedRequests"), true)
+				});
+
+				this.retrieve_data("Transaction", "eth").then(function(result){
+					self.$data.transactions_eth[0]["count"] = self.add_commas(result["completed"].length, false)
+					self.$data.transactions_eth[0]["amount"] = self.add_commas(self.calc_total(result["completed"], "completed"), true)
+
+					self.$data.transactions_eth[1]["count"] = self.add_commas(result["failed"].length, false)
+					self.$data.transactions_eth[1]["amount"] = self.add_commas(self.calc_total(result["failed"], "failed"), true)
+
+					self.$data.transactions_eth[2]["count"] = self.add_commas(result["pending"].length, false)
+					self.$data.transactions_eth[2]["amount"] = self.add_commas(self.calc_total(result["pending"], "completed"), true)
+				});
+				this.retrieve_data("Request", "eth").then(function(result){
+					self.$data.requests_eth[0]["count"] = self.add_commas(result["pending"].length, false)
+					self.$data.requests_eth[0]["amount"] = self.add_commas(self.calc_total(result["pending"], "pendingRequests"), true)
+
+					self.$data.requests_eth[1]["count"] = self.add_commas(result["approved"].length, false)
+					self.$data.requests_eth[1]["amount"] = self.add_commas(self.calc_total(result["approved"], "approvedRequests"), true)
+
+					self.$data.requests_eth[2]["count"] = self.add_commas(result["rejected"].length, false)
+					self.$data.requests_eth[2]["amount"] = self.add_commas(self.calc_total(result["rejected"], "rejectedRequests"), true)
+					self.$q.loading.hide()
+					//self.animate_knob()
+				});
+			},
+        },
+        computed: {
+			view_toggle: function(){
+				return (window.location.pathname).includes("transactions") || (window.location.pathname).includes("requests")
+			}
+        },
+        watch: {
+			selected: function(newVal, oldVal){
+				loadRoute(this, newVal)
+			},
+        },
+        beforeMount(){
+			this.$q.loading.show()
+            Quasar.i18n.set(Quasar.i18n.zhHans)
+			this.display_data()
+        }
+	  })
+    </script>
+</body>
+</html>

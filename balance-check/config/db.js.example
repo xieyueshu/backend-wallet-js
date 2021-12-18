@@ -1,0 +1,4 @@
+module.exports = [{
+	url: "mongodb://user:password@localhost:27017",
+	name: "wallet"
+}];

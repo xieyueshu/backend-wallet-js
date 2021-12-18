@@ -1,0 +1,25 @@
+<!-- Sep 10 2020 (danie) - created url settings component -->
+<div class="col-md-6 col-sm-12 col-xs-12 pad-all">
+    <div class="pad-all">
+        <q-card class="tab-control bg-white">
+            <div class="text-primary bg-grey-2 container-title"><strong> URL Settings </strong></div>
+            <q-card-separator></q-card-separator>
+            <q-card-main class="q-pa-none">
+                <q-card class="semi-container-form bg-white">
+                    <q-card-main class="q-pa-sm">
+                        <q-input id="depositUrl" name="depositUrl" type="text" class="form-control-2 input-font-size"  :readonly="readonly_settings"
+                            stack-label="Deposit URL" size="60" required="true" value="" v-model="env_settings.SUCCESS_DEPOSIT_URL"></q-input>
+                        <q-input id="withdrawUrl" name="withdrawUrl" type="text" class="form-control-2 input-font-size" :readonly="readonly_settings"
+                            stack-label="Withdraw URL" size="60" required="true" value="" v-model="env_settings.SUCCESS_WITHDRAW_URL"></q-input>
+                        <% if(permissions.indexOf('editSettings') !== -1){ %>
+                            <q-input id="urlPassword" name="urlPassword" type="password" class="form-control-2 input-font-size"
+                                stack-label="Password" size="60" required="true" value="" v-model="url_password"></q-input>
+                            <q-btn color="primary" id="updateUrl" size="md" label="Update URL" glossy type="update" class="form-control-2 expand" @click="update_url()"></q-btn>
+                        <% } %>
+                    </q-card-main>
+                </q-card>
+            </q-card-main>
+            &nbsp;
+        </q-card>
+    </div>
+</div>

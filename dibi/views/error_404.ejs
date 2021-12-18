@@ -1,0 +1,51 @@
+<%- include('dashboard/dashboard_error404_header') %>
+<div class="big-pad">
+    <center>
+        <!--<div class="row semi-form-control">
+            <div class="col-md-3 col-sm-12 col-xs-12"></div>
+            <div class="col-md-7 col-sm-12 col-xs-12">
+                <div class="row">
+                    <div class="col-md-10 col-sm-12 col-xs-12">
+                        <div class="row">
+                            <span class="q-display-4 header-text-shadow">ERROR</span>
+                            <span class="q-display-4 header-text-shadow margin-right-slash">4</span>
+                            <q-icon name="sentiment_very_dissatisfied" size="6rem" class="header-text-shadow"></q-icon>
+                            <span class="q-display-4 header-text-shadow margin-left-slash">4!</span><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+
+        
+        <div class="row semi-form-control-2 add-margin-top">
+            <div class="col-md-2 col-sm-12 col-xs-12"></div>
+            <div class="col-md-8 col-sm-12 col-xs-12">
+                
+                
+                    <span class="header-text-shadow expand">4<q-icon name="sentiment_very_dissatisfied" size="5rem" class="header-text-shadow adjust-margin-top"></q-icon>4&nbsp;</span>
+                
+                <span class="header-text-shadow expand">ERROR</span>
+            </div>
+        </div>
+        <div class="semi-form-control">
+            <span class="q-display-1 text-shadow">Page Not Found!</span><br>
+        </div>
+        <div class="semi-form-control-2">
+            <span class="q-display-0 text-shadow">Something went wrong.</span><br>
+        </div>
+        <q-btn label="Go Back" color="primary" class="shadow-2" @click="go_back"></q-btn>
+    </center>
+</div>
+
+</q-page-container>
+</q-layout>
+
+</div>
+<script src="/scripts/quasar.ie.polyfills.umd.min.js"></script>
+<script src="/scripts/vue.min.js"></script>
+<script src="/scripts/quasar.mat.umd.min.js"></script>
+<script src="/scripts/i18n.zh-hans.umd.min.js"></script>
+<script src="/scripts/big.min.js"></script>
+
+<%- include('dashboard/dashboard_error404_footer') %>

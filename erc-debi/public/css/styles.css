@@ -1,0 +1,218 @@
+.container-table {
+    width: 90%;
+    margin: 2% auto;
+    margin-top: 1.5%;
+}
+
+.container-form {
+    width: 75%;
+    padding: 2.5%;
+    margin: 5% auto;
+    margin-top: 1.5%;
+}
+
+.container-form-2 {
+    width: 75%;
+    padding: 2.5%;
+    margin: 5% auto;
+    margin-top: 1.5%;
+}
+
+.semi-container-form-2 {
+    width: 85%;
+    margin: 2% auto;
+}
+
+.container-title {
+    width: 100%;
+    padding: 2%;
+}
+
+.container-title-2 {
+    width: 100%;
+    padding: 1em;
+}
+
+
+.semi-container-form {
+    width: 90%;
+    margin: 2% auto;
+}
+
+.add-margin-top {
+    margin-top: 10%;
+}
+
+.form-control {
+    margin-bottom: 5%;
+}
+
+.pad-all {
+    padding: 1%;
+}
+
+.half-pad-all {
+    padding: 0.5%;
+}
+
+.pad-top {
+    padding-top: 4%;
+}
+
+.pad-bottom {
+    padding-bottom: 1%;
+}
+
+.pad-bottom-2 {
+    padding-bottom: 0.5%;
+}
+
+.pad-vertical {
+    padding-bottom: 1%;
+    padding-top: 1%;
+}
+
+.toggle-control {
+    margin: 5% auto;
+}
+
+.tab-control {
+    width: 98%;
+    margin: 1% auto;
+    margin-bottom: 0;
+}
+
+.expand {
+    width: 100%;
+}
+
+.semi-expand {
+    width: 50%;
+}
+
+.semi-form-control {
+    margin-bottom: 1%;
+}
+
+.adjust-margin-top {
+    margin-top: -15px;
+}
+
+.semi-form-control-2 {
+    margin-bottom: 3%;
+}
+
+.form-control-2 {
+    margin: 2.5% auto;
+}
+
+.form-control-3 {
+    margin: 1.25% auto;
+}
+
+.col-control {
+    padding-left: 3%;
+    padding-right: 3%;
+}
+
+.margin-top-slash {
+    margin-top: 0;
+}
+
+.margin-bottom-slash {
+    margin-bottom: 0;
+}
+
+.margin-left-slash {
+    margin-left: 0;
+}
+
+.add-margin-right {
+    margin-right: 1%;
+}
+
+.add-margin-left {
+    margin-left: 1%;
+}
+
+.margin-right-slash {
+    margin-right: 0;
+}
+
+.header-separator {
+    border-bottom: 1px solid rgba(0,0,0,.25);
+}
+
+.separator {
+    border-left: 1px solid rgba(0,0,0,.25);
+}
+
+.table-control {
+    max-height: 535px;
+    overflow-y: auto;
+}
+
+.table-control-2 {
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+
+.invisible-div {
+    width: 0px;
+    height: 0px;
+    overflow: hidden;
+}
+
+#q-app {
+    background-color: #edeeef;
+    background-image: linear-gradient( #edeeef, #38393a);
+    
+}
+
+.admin-icon {
+    /* width: 100%; */
+    margin: 10% 10% 10% 10%;
+}
+
+.big-pad {
+    padding: 3%;
+}
+
+.header-text-shadow {
+    text-shadow: #ccc 4px 3px;
+    font-size: 5rem;
+}
+
+.text-shadow {
+    text-shadow: #bbb 2px 1.5px;
+}
+
+.overflow-control {
+    overflow: auto;
+}
+
+.overflow-wrap-control {
+    overflow-wrap: break-word;
+}
+
+.adjust-font-size {
+    font-size: 1rem;
+}
+
+.heighten {
+    height: 100%;
+}
+
+body{
+    background-color: #000000;
+  padding: 0px;
+  margin: 0px;
+}
+
+#gradient {
+    width: 100%;
+    height: 800px;
+    padding: 0px;
+    margin: 0px;
+}

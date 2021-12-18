@@ -1,0 +1,172 @@
+	<script src="/scripts/big.min.js"></script>
+    <script>
+		new Vue({
+        el: '#q-app',
+        data: function () {
+          return {
+				drawerState: true,
+				columns_transactions: [
+					{ name: 'name', required: true, label: '交易 Transaction', align: 'left', field: 'name', sortable: true },
+              		{ name: 'count', required: true, label: '总数 Total Count', align: 'left', field: 'count', sortable: true },
+              		{ name: 'amount', required: true, label: '总金额 Total Amount', align: 'left', field: 'amount', sortable: true }
+				],
+				columns_requests: [
+					{ name: 'name', required: true, label: '请求 Request', align: 'left', field: 'name', sortable: true },
+              		{ name: 'count', required: true, label: '总数 Total Count', align: 'left', field: '正在加载 Count', sortable: true },
+              		{ name: 'amount', required: true, label: '总金额 Total Amount', align: 'left', field: 'amount', sortable: true }
+				],
+				visible_transactions: ['completed', 'failed', 'pending'],
+				separator: 'horizontal',
+				max_balance: 0,
+				transactions: {},
+				requests: {},
+				transactions_loading:[{name: "已完成 completed", count: "正在加载 loading...", amount: "正在加载 loading...", table:"completed",status:"L"},{name: "正在处理 pending", count: "正在加载 loading...", amount: "正在加载 loading...", table:"pending",status:"P"},{name: "失败 failed", count: "正在加载 loading...", amount: "正在加载 loading...", table:"failed",status:"X"}],
+				requests_loading: [{name: "已批准 approved", count: "正在加载 loading...", amount: "正在加载 loading...", table:"approved",status:"A"},{name: "正在处理 pending", count: "正在加载 loading...", amount: "正在加载 loading...", table:"pending",status:"P"},{name: "拒绝 rejected", count: "正在加载 loading...", amount: "正在加载 loading...", table:"rejected",status:"R"}],
+				hot_wallet: {eth_address: "loading...", amtc: 0.00, eth: 0.00, amtc_display: "正在加载 loading...", eth_display: "正在加载 loading...", amt_address: "正在加载 loading...", amt: 0.00, amt_display: "正在加载 loading..."},
+				max_amount_transactions_amtc: 1,
+				max_amount_requests_amtc: 1,
+				max_amount_transactions_eth: 1,
+				max_amount_requests_eth: 1,
+				max_count_transactions_amtc: 1,
+				max_count_requests_amtc: 1,
+				max_count_transactions_eth: 1,
+				max_count_requests_eth: 1,
+				selected: 'Withdraw',
+				props: JSON.parse('<%- JSON.stringify(dashProps) %>'),
+				expanded: [],
+				color: "primary",
+				settings: JSON.parse('<%- JSON.stringify(viewSettings) %>'),
+          }
+        },
+        methods: {
+			logout:function(){
+				$.post("/logout")
+					.done(function(data){
+						window.location.replace("/admin/login");
+					})
+			},
+			change_route: function(link){
+				window.location.href = link;
+			},
+			create_array: function(arr, index){ // Creates an array of selected entries
+				var new_arr = [];
+				for(var i = 0; i < arr.length; i++){
+					new_arr.push(arr[i][index]);
+				}
+				return new_arr;
+			},
+			retrieve_data: function(type, filter){
+				return fetch(`/getWithdraw`+type+`/?data=all&coinType=`+filter)
+				.then(res => res.json())
+				.then(res => {
+					return res;
+				});
+			},
+			call_api: function(url){
+				return fetch(url)
+				.then(res => res.json())
+				.then(res => {
+					return res;
+				});
+			},
+			calc_total: function(table, table_name){
+				let total = [];
+					Object.entries(table).forEach(([key, val]) => {
+						if(table_name.indexOf("Requests") >= 0) total.push(parseFloat(val.totalAmount)) // the value of the current key.
+						else total.push(parseFloat(val.amount))
+					});
+				var total_amount = (Big(Big(total.reduce(function(total, num){ return total + num }, 0)).round(2,3)).toFixed())//.split(".");
+				return total_amount
+				/*total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+				return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);*/
+			},
+			add_commas: function(value, checker){
+				var total_amount = (Big(Big(value).round(2,3)).toFixed()).split(".");
+				total_amount[0] = total_amount[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+				if(checker){
+					return total_amount[0] + "." + (total_amount.length == 1 ? "00" : total_amount[1]);
+				}
+				return total_amount[0]
+			},
+			display_data: function(){
+				var self = this
+				for(var coin of this.settings.coins) {
+					self.$data.hot_wallet[coin + "_address"] = "正在加载 loading...";
+					self.$data.hot_wallet[coin + "_display"] = "正在加载 loading...";
+				}
+				fetch(`/getHotWallet`)
+				.then(res => res.json())
+				.then(res => {
+					if(!res["eth"]){
+						res["eth"] = {address: '', amtc:0, eth:0};
+					}
+					if(!res["amt"]){
+						res["amt"] = {address: '', amt: 0, amt_a: 0};
+					}
+					if(!res["btc"]){
+						res["btc"] = {address: '', btc: 0, omni: 0};
+					}
+					self.$data.hot_wallet = Object.keys(res).reduce((hot, coin) => {
+						for(const key in res[coin]) {
+							if (isNaN(res[coin][key]) || key === "address") {
+								hot[coin + "_" + key] = res[coin][key];
+							} else {
+								hot[key + "_display"] = self.add_commas(res[coin][key], true);
+								hot[key] = typeof res[coin][key] === "string" ? parseFloat(res[coin][key]) : res[coin][key];
+							}
+						}
+						return hot;
+					}, {});
+					self.$data.max_balance = Math.max(Big(res["eth"]["amtc"]).toFixed(), Big(res["eth"]["eth"]).toFixed(), Big(res["amt"]["amt"]).toFixed()) * 1.1
+				});
+
+				for(let c = 0; c < this.settings.coins.length; c++){
+					const coin = this.settings.coins[c];
+					const txnIndex = `${coin}`;
+					const reqIndex = `${coin}`;
+					if(!self.$data.transactions[txnIndex]) {
+						self.$data.transactions[txnIndex] = self.$data.transactions_loading.slice(0);
+					}
+					if(!self.$data.requests[reqIndex]) {
+						self.$data.requests[reqIndex] = self.$data.requests_loading.slice(0);
+					}
+					self.call_api("/getWithdrawStats?" + new URLSearchParams({coinType: coin})).then(function(result) {
+						const txnList = result.transaction;
+						const reqList = result.request;
+						for(let i = 0; i < 3; i++) {
+							const status = self.$data.transactions[txnIndex][i].status;
+							const filtered = txnList.filter(m => m._id === status);
+							const txnStat = (filtered.length > 0) ? filtered[0].value : {count: "0", amount: "0"};
+							self.$data.transactions[txnIndex][i]["count"] = self.add_commas(txnStat.count, false);
+							self.$data.transactions[txnIndex][i]["amount"] = self.add_commas(txnStat.amount, true);							
+						}
+						for(let i = 0; i < 3; i++) {
+							const status = self.$data.requests[reqIndex][i].status;
+							const filtered = reqList.filter(m => m._id === status);
+							const reqStat = (filtered.length > 0) ? filtered[0].value : {count: "0", amount: "0"};
+							self.$data.requests[reqIndex][i]["count"] = self.add_commas(reqStat.count, false);
+							self.$data.requests[reqIndex][i]["amount"] = self.add_commas(reqStat.amount, true);							
+						}
+					});
+				};
+			},
+        }, // methods
+        computed: {
+			view_toggle: function(){
+				return (window.location.pathname).includes("transactions") || (window.location.pathname).includes("requests")
+			}
+        },
+        watch: {
+			selected: function(newVal, oldVal){
+				loadRoute(this, newVal)
+			},
+        },
+        beforeMount(){
+					// this.$q.loading.show()
+					Quasar.i18n.set(Quasar.i18n.zhHans)
+					this.display_data()
+        }
+	  })
+    </script>
+</body>
+</html>
